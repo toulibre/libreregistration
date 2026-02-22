@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - data:/data
+    environment:
+      - UPLOAD_DIR=/data/uploads
+    env_file:
+      - .env
+    restart: unless-stopped
+
+volumes:
+  data:

@@ -1,0 +1,8 @@
+@import "tailwindcss" source("../../templates");
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-accent: var(--accent-color, #6d28d9);
+  --color-accent-light: var(--accent-color-light, #8b5cf6);
+  --color-accent-dark: var(--accent-color-dark, #5b21b6);
+}

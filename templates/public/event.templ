@@ -1,0 +1,108 @@
+package public
+
+import (
+	"fmt"
+	"github.com/toulibre/libreregistration/internal/i18n"
+	"github.com/toulibre/libreregistration/internal/models"
+	"github.com/toulibre/libreregistration/templates/layouts"
+)
+
+templ Event(event *models.Event, registrations []models.Registration, csrfField string, siteName string, accentColor string, flash string, cancelMsg string) {
+	@layouts.PublicShell(event.Title, siteName, accentColor) {
+		<article>
+			if event.BannerPath != "" {
+				<img src={ "/uploads/" + event.BannerPath } class="w-full h-64 object-cover rounded-lg mb-6" alt=""/>
+			}
+			<h1 class="text-3xl font-bold mb-4">{ event.Title }</h1>
+			<div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-6">
+				<span>📅 { i18n.FormatDateTime(ctx, event.EventDate) }</span>
+				if event.Location != "" {
+					<span>📍 { event.Location }</span>
+				}
+				if event.MaxCapacity != nil {
+					<span>👥 { fmt.Sprintf(i18n.T(ctx, "event.places_fmt"), event.RegistrationCount, *event.MaxCapacity) }</span>
+				}
+			</div>
+			if event.Latitude != nil && event.Longitude != nil {
+				<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+				<div
+					id="map"
+					class="h-64 rounded-lg mb-6"
+					data-lat={ fmt.Sprintf("%f", *event.Latitude) }
+					data-lng={ fmt.Sprintf("%f", *event.Longitude) }
+					data-title={ event.Title }
+				></div>
+				<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+				<script>
+					(function() {
+						var el = document.getElementById('map');
+						var lat = parseFloat(el.getAttribute('data-lat'));
+						var lng = parseFloat(el.getAttribute('data-lng'));
+						var title = el.getAttribute('data-title');
+						var map = L.map('map').setView([lat, lng], 15);
+						L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+							attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+						}).addTo(map);
+						L.marker([lat, lng]).addTo(map).bindPopup(title).openPopup();
+					})();
+				</script>
+			}
+			if event.DescriptionHTML != "" {
+				<div class="prose max-w-none mb-8">
+					@templ.Raw(event.DescriptionHTML)
+				</div>
+			}
+			if event.ImagePath != "" {
+				<img src={ "/uploads/" + event.ImagePath } class="max-w-full rounded-lg mb-8" alt=""/>
+			}
+			if cancelMsg != "" {
+				<div class="bg-blue-50 text-blue-700 p-4 rounded mb-6">{ cancelMsg }</div>
+			}
+			if flash != "" {
+				<div class="bg-green-50 text-green-700 p-4 rounded mb-6">{ flash }</div>
+			}
+			if event.RegistrationOpen {
+				if event.MaxCapacity == nil || event.RegistrationCount < *event.MaxCapacity {
+					<div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+						<h2 class="text-xl font-semibold mb-4">{ i18n.T(ctx, "event.register_heading") }</h2>
+						<form method="POST" action={ templ.SafeURL("/event/" + event.Slug + "/register") } class="space-y-4">
+							@templ.Raw(csrfField)
+							<div>
+								<label for="name" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "event.label.name") }</label>
+								<input type="text" id="name" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"/>
+							</div>
+							<div>
+								<label for="email" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "event.label.email") }</label>
+								<input type="email" id="email" name="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"/>
+							</div>
+							<div>
+								<label for="comment" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "event.label.comment") }</label>
+								<textarea id="comment" name="comment" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"></textarea>
+							</div>
+							<button type="submit" class="bg-accent text-white py-2 px-6 rounded-md hover:bg-accent-dark transition-colors">{ i18n.T(ctx, "event.register_button") }</button>
+						</form>
+					</div>
+				} else {
+					<div class="bg-yellow-50 text-yellow-700 p-4 rounded mb-6">{ i18n.T(ctx, "event.registration_full") }</div>
+				}
+			} else {
+				<div class="bg-gray-50 text-gray-600 p-4 rounded mb-6">{ i18n.T(ctx, "event.registration_closed") }</div>
+			}
+			if event.AttendeeListPublic && len(registrations) > 0 {
+				<div class="bg-white rounded-lg shadow-sm p-6">
+					<h2 class="text-xl font-semibold mb-4">{ i18n.Tf(ctx, "event.participants_fmt", len(registrations)) }</h2>
+					<ul class="space-y-2">
+						for _, reg := range registrations {
+							<li class="text-gray-700">
+								{ reg.Name }
+								if reg.Comment != "" {
+									<span class="text-sm text-gray-500"> — { reg.Comment }</span>
+								}
+							</li>
+						}
+					</ul>
+				</div>
+			}
+		</article>
+	}
+}

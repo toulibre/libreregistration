@@ -1,0 +1,39 @@
+version: "2"
+linters:
+  enable:
+    - gocritic
+    - misspell
+  settings:
+    errcheck:
+      exclude-functions:
+        - (*database/sql.DB).Close
+        - (*database/sql.Rows).Close
+        - (*database/sql.Tx).Rollback
+        - (*os.File).Close
+        - os.Remove
+        - (*net/http.Request).ParseForm
+        - (*github.com/gorilla/sessions.Session).Save
+        - (github.com/a-h/templ.Component).Render
+        - (*encoding/csv.Writer).Write
+    misspell:
+      locale: US
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - .*_templ\.go$
+      - bin
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

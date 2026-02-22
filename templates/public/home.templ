@@ -1,0 +1,30 @@
+package public
+
+import (
+	"github.com/toulibre/libreregistration/internal/i18n"
+	"github.com/toulibre/libreregistration/internal/models"
+	"github.com/toulibre/libreregistration/templates/layouts"
+)
+
+templ Home(events []models.Event, siteName string, accentColor string) {
+	@layouts.PublicShell(i18n.T(ctx, "home.title"), siteName, accentColor) {
+		<h1 class="text-3xl font-bold mb-8">{ i18n.T(ctx, "home.heading") }</h1>
+		if len(events) == 0 {
+			<p class="text-gray-500">{ i18n.T(ctx, "home.no_events") }</p>
+		} else {
+			<div class="space-y-4">
+				for _, event := range events {
+					<a href={ templ.SafeURL("/event/" + event.Slug) } class="block bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+						<h2 class="text-xl font-semibold text-accent">{ event.Title }</h2>
+						<div class="mt-2 text-sm text-gray-500 space-x-4">
+							<span>📅 { i18n.FormatDateTime(ctx, event.EventDate) }</span>
+							if event.Location != "" {
+								<span>📍 { event.Location }</span>
+							}
+						</div>
+					</a>
+				}
+			</div>
+		}
+	}
+}

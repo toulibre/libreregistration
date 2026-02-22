@@ -1,0 +1,91 @@
+package layouts
+
+import "github.com/toulibre/libreregistration/internal/i18n"
+
+templ Base(title string, siteName string, accentColor string) {
+	<!DOCTYPE html>
+	<html lang={ i18n.HTMLLang(ctx) } style={ accentColorStyle(accentColor) }>
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title } — { siteName }</title>
+			<link rel="stylesheet" href="/static/css/output.css"/>
+		</head>
+		<body class="min-h-screen bg-gray-50 text-gray-900">
+			{ children... }
+		</body>
+	</html>
+}
+
+func accentColorStyle(color string) string {
+	if color == "" {
+		return ""
+	}
+	return "--accent-color:" + color
+}
+
+templ PublicShell(title string, siteName string, accentColor string) {
+	@Base(title, siteName, accentColor) {
+		<header class="bg-white shadow-sm">
+			<div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+				<a href="/" class="text-xl font-bold text-accent hover:text-accent-dark">{ siteName }</a>
+				@langSwitcher()
+			</div>
+		</header>
+		<main class="max-w-4xl mx-auto px-4 py-8">
+			{ children... }
+		</main>
+		<footer class="mt-16 border-t border-gray-200 py-6 text-center text-sm text-gray-500">
+			<p>{ i18n.T(ctx, "footer.powered_by") } <a href="https://github.com/toulibre/libreregistration" class="underline">LibreRegistration</a></p>
+		</footer>
+	}
+}
+
+templ Logo(size string) {
+	<svg xmlns="http://www.w3.org/2000/svg" width={ size } height={ size } viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+		<line x1="16" y1="2" x2="16" y2="6"></line>
+		<line x1="8" y1="2" x2="8" y2="6"></line>
+		<line x1="3" y1="10" x2="21" y2="10"></line>
+		<path d="M9 16l2 2 4-4"></path>
+	</svg>
+}
+
+templ AdminShell(title string, siteName string, accentColor string, username string) {
+	@Base(title, siteName, accentColor) {
+		<div class="flex min-h-screen">
+			<aside class="w-64 bg-gray-900 text-gray-100 p-4 space-y-2">
+				<a href="/admin/" class="flex items-center gap-2 text-lg font-bold mb-6 text-white">
+					@Logo("24")
+					{ siteName }
+				</a>
+				<a href="/admin/" class="block px-3 py-2 rounded hover:bg-gray-700">{ i18n.T(ctx, "nav.dashboard") }</a>
+				<a href="/admin/events" class="block px-3 py-2 rounded hover:bg-gray-700">{ i18n.T(ctx, "nav.events") }</a>
+				<a href="/admin/users" class="block px-3 py-2 rounded hover:bg-gray-700">{ i18n.T(ctx, "nav.users") }</a>
+				<a href="/admin/settings" class="block px-3 py-2 rounded hover:bg-gray-700">{ i18n.T(ctx, "nav.settings") }</a>
+				<div class="mt-auto pt-8 border-t border-gray-700 text-sm text-gray-400">
+					<p class="mb-2">{ username }</p>
+					<form method="POST" action="/admin/logout">
+						<button type="submit" class="text-gray-400 hover:text-white underline">{ i18n.T(ctx, "nav.logout") }</button>
+					</form>
+					<div class="mt-2">
+						@langSwitcher()
+					</div>
+				</div>
+			</aside>
+			<div class="flex-1">
+				<main class="p-8">
+					{ children... }
+				</main>
+			</div>
+		</div>
+	}
+}
+
+templ langSwitcher() {
+	if i18n.Locale(ctx) == "fr" {
+		<a href="?lang=en" class="text-sm text-gray-400 hover:text-white">{ i18n.T(ctx, "lang.switch") }</a>
+	} else {
+		<a href="?lang=fr" class="text-sm text-gray-400 hover:text-white">{ i18n.T(ctx, "lang.switch") }</a>
+	}
+}

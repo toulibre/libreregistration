@@ -1,0 +1,30 @@
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - unused
+    - ineffassign
+    - misspell
+    - gocritic
+
+linters-settings:
+  misspell:
+    locale: US
+  errcheck:
+    exclude-functions:
+      - "(*database/sql.DB).Close"
+      - "(*database/sql.Rows).Close"
+      - "(*database/sql.Tx).Rollback"
+      - "(*os.File).Close"
+      - "os.Remove"
+      - "(*net/http.Request).ParseForm"
+      - "(*github.com/gorilla/sessions.Session).Save"
+      - "(github.com/a-h/templ.Component).Render"
+      - "(*encoding/csv.Writer).Write"
+
+issues:
+  exclude-dirs:
+    - bin
+  exclude-files:
+    - ".*_templ\\.go$"

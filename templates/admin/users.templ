@@ -1,0 +1,56 @@
+package admin
+
+import (
+	"fmt"
+	"github.com/toulibre/libreregistration/internal/i18n"
+	"github.com/toulibre/libreregistration/internal/models"
+	"github.com/toulibre/libreregistration/templates/layouts"
+)
+
+templ Users(users []models.User, siteName string, accentColor string, displayName string, csrfField string, flash string) {
+	@layouts.AdminShell(i18n.T(ctx, "users.title"), siteName, accentColor, displayName) {
+		<div class="flex justify-between items-center mb-6">
+			<h1 class="text-2xl font-bold">{ i18n.T(ctx, "users.heading") }</h1>
+			<a href="/admin/users/new" class="bg-accent text-white px-4 py-2 rounded-md hover:bg-accent-dark transition-colors">{ i18n.T(ctx, "users.new") }</a>
+		</div>
+		if flash != "" {
+			<div class="bg-green-50 text-green-700 p-3 rounded mb-4 text-sm">{ flash }</div>
+		}
+		<div class="bg-white rounded-lg shadow-sm overflow-hidden">
+			<table class="w-full">
+				<thead class="bg-gray-50">
+					<tr>
+						<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "users.col.login") }</th>
+						<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "users.col.name") }</th>
+						<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "users.col.role") }</th>
+						<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "users.col.created_at") }</th>
+						<th class="text-right px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "users.col.actions") }</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-gray-100">
+					for _, user := range users {
+						<tr>
+							<td class="px-4 py-3 text-sm text-gray-500">{ user.Username }</td>
+							<td class="px-4 py-3 font-medium">{ user.DisplayName() }</td>
+							<td class="px-4 py-3 text-sm">
+								if user.Role == "admin" {
+									<span class="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">{ i18n.T(ctx, "users.role.admin") }</span>
+								} else {
+									<span class="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">{ i18n.T(ctx, "users.role.manager") }</span>
+								}
+							</td>
+							<td class="px-4 py-3 text-sm text-gray-500">{ i18n.FormatDate(ctx, user.CreatedAt) }</td>
+							<td class="px-4 py-3 text-right">
+								<form method="POST" action={ templ.SafeURL(fmt.Sprintf("/admin/users/%s", user.ID)) } class="inline" onsubmit={ confirmSubmit(i18n.T(ctx, "users.confirm_delete")) }>
+									@templ.Raw(csrfField)
+									<input type="hidden" name="_method" value="DELETE"/>
+									<button type="submit" class="text-red-500 hover:text-red-700 text-sm">{ i18n.T(ctx, "users.action.delete") }</button>
+								</form>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+}

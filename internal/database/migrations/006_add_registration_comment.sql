@@ -1,0 +1,1 @@
+ALTER TABLE registrations ADD COLUMN comment TEXT NOT NULL DEFAULT '';

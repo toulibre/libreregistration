@@ -1,0 +1,73 @@
+package admin
+
+import (
+	"fmt"
+	"github.com/toulibre/libreregistration/internal/i18n"
+	"github.com/toulibre/libreregistration/internal/models"
+	"github.com/toulibre/libreregistration/templates/layouts"
+)
+
+templ Attendees(event *models.Event, registrations []models.Registration, siteName string, accentColor string, username string, csrfField string, flash string) {
+	@layouts.AdminShell(i18n.Tf(ctx, "attendees.title_fmt", event.Title), siteName, accentColor, username) {
+		<div class="flex justify-between items-center mb-6">
+			<div>
+				<h1 class="text-2xl font-bold">{ i18n.T(ctx, "attendees.heading") }</h1>
+				<p class="text-gray-500">{ event.Title }</p>
+			</div>
+			<div class="flex gap-2">
+				<a href={ templ.SafeURL(fmt.Sprintf("/admin/events/%s/attendees/csv", event.ID)) } class="border border-gray-300 px-4 py-2 rounded-md text-sm hover:bg-gray-50">{ i18n.T(ctx, "attendees.export_csv") }</a>
+				<a href="/admin/events" class="text-sm text-gray-500 px-4 py-2 hover:text-gray-700">{ i18n.T(ctx, "attendees.back") }</a>
+			</div>
+		</div>
+		if flash != "" {
+			<div class="bg-green-50 text-green-700 p-3 rounded mb-4 text-sm">{ flash }</div>
+		}
+		if len(registrations) == 0 {
+			<p class="text-gray-500">{ i18n.T(ctx, "attendees.empty") }</p>
+		} else {
+			<div class="bg-white rounded-lg shadow-sm overflow-hidden">
+				<table class="w-full">
+					<thead class="bg-gray-50">
+						<tr>
+							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "attendees.col.name") }</th>
+							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "attendees.col.email") }</th>
+							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "attendees.col.comment") }</th>
+							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "attendees.col.date") }</th>
+							<th class="text-right px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "attendees.col.actions") }</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-gray-100">
+						for _, reg := range registrations {
+							<tr>
+								<td class="px-4 py-3">{ reg.Name }</td>
+								<td class="px-4 py-3 text-sm text-gray-500">
+									if reg.Email != "" {
+										{ reg.Email }
+									} else {
+										<span class="text-gray-300">—</span>
+									}
+								</td>
+								<td class="px-4 py-3 text-sm text-gray-500">
+									if reg.Comment != "" {
+										{ reg.Comment }
+									} else {
+										<span class="text-gray-300">—</span>
+									}
+								</td>
+								<td class="px-4 py-3 text-sm text-gray-500">{ i18n.FormatDateTimeCSV(ctx, reg.RegisteredAt) }</td>
+								<td class="px-4 py-3 text-right">
+									<form method="POST" action={ templ.SafeURL(fmt.Sprintf("/admin/events/%s/attendees/%s", event.ID, reg.ID)) } class="inline" onsubmit={ confirmSubmit(i18n.T(ctx, "attendees.confirm_delete")) }>
+										@templ.Raw(csrfField)
+										<input type="hidden" name="_method" value="DELETE"/>
+										<button type="submit" class="text-red-500 hover:text-red-700 text-sm">{ i18n.T(ctx, "attendees.action.delete") }</button>
+									</form>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+			<p class="mt-4 text-sm text-gray-500">{ i18n.Tn(ctx, "attendees.count", len(registrations)) }</p>
+		}
+	}
+}

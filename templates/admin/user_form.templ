@@ -1,0 +1,41 @@
+package admin
+
+import (
+	"github.com/toulibre/libreregistration/internal/i18n"
+	"github.com/toulibre/libreregistration/templates/layouts"
+)
+
+templ UserForm(siteName string, accentColor string, displayName string, csrfField string, errorMsg string) {
+	@layouts.AdminShell(i18n.T(ctx, "user_form.title"), siteName, accentColor, displayName) {
+		<h1 class="text-2xl font-bold mb-6">{ i18n.T(ctx, "user_form.heading") }</h1>
+		if errorMsg != "" {
+			<div class="bg-red-50 text-red-700 p-3 rounded mb-4 text-sm">{ errorMsg }</div>
+		}
+		<form method="POST" action="/admin/users" class="bg-white rounded-lg shadow-sm p-6 space-y-4 max-w-md">
+			@templ.Raw(csrfField)
+			<div>
+				<label for="username" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "user_form.label.login") }</label>
+				<input type="text" id="username" name="username" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"/>
+			</div>
+			<div>
+				<label for="name" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "user_form.label.name") }</label>
+				<input type="text" id="name" name="name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"/>
+			</div>
+			<div>
+				<label for="password" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "user_form.label.password") }</label>
+				<input type="password" id="password" name="password" required minlength="8" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"/>
+			</div>
+			<div>
+				<label for="role" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "user_form.label.role") }</label>
+				<select id="role" name="role" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent">
+					<option value="manager">{ i18n.T(ctx, "user_form.role.manager") }</option>
+					<option value="admin">{ i18n.T(ctx, "user_form.role.admin") }</option>
+				</select>
+			</div>
+			<div class="flex gap-3 pt-4">
+				<button type="submit" class="bg-accent text-white px-6 py-2 rounded-md hover:bg-accent-dark transition-colors">{ i18n.T(ctx, "user_form.button.create") }</button>
+				<a href="/admin/users" class="px-6 py-2 text-gray-600 hover:text-gray-800">{ i18n.T(ctx, "user_form.button.cancel") }</a>
+			</div>
+		</form>
+	}
+}

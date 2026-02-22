@@ -1,0 +1,31 @@
+package admin
+
+import (
+	"fmt"
+	"github.com/toulibre/libreregistration/internal/i18n"
+	"github.com/toulibre/libreregistration/templates/layouts"
+)
+
+templ Dashboard(siteName string, accentColor string, username string, totalEvents int, upcomingEvents int, totalRegistrations int) {
+	@layouts.AdminShell(i18n.T(ctx, "dashboard.title"), siteName, accentColor, username) {
+		<h1 class="text-2xl font-bold mb-6">{ i18n.T(ctx, "dashboard.heading") }</h1>
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+			<div class="bg-white rounded-lg shadow-sm p-6">
+				<p class="text-sm text-gray-500 mb-1">{ i18n.T(ctx, "dashboard.events") }</p>
+				<p class="text-3xl font-bold">{ fmt.Sprintf("%d", totalEvents) }</p>
+				<p class="text-sm text-gray-400 mt-1">{ i18n.Tf(ctx, "dashboard.upcoming_fmt", upcomingEvents) }</p>
+			</div>
+			<div class="bg-white rounded-lg shadow-sm p-6">
+				<p class="text-sm text-gray-500 mb-1">{ i18n.T(ctx, "dashboard.registrations") }</p>
+				<p class="text-3xl font-bold">{ fmt.Sprintf("%d", totalRegistrations) }</p>
+			</div>
+			<div class="bg-white rounded-lg shadow-sm p-6">
+				<p class="text-sm text-gray-500 mb-1">{ i18n.T(ctx, "dashboard.quick_actions") }</p>
+				<div class="mt-2 space-y-2">
+					<a href="/admin/events/new" class="block text-accent hover:underline text-sm">{ i18n.T(ctx, "dashboard.new_event") }</a>
+					<a href="/admin/events" class="block text-accent hover:underline text-sm">{ i18n.T(ctx, "dashboard.view_events") }</a>
+				</div>
+			</div>
+		</div>
+	}
+}

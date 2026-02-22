@@ -1,0 +1,80 @@
+package admin
+
+import (
+	"fmt"
+	"github.com/toulibre/libreregistration/internal/i18n"
+	"github.com/toulibre/libreregistration/internal/models"
+	"github.com/toulibre/libreregistration/templates/layouts"
+)
+
+script confirmSubmit(msg string) {
+	if (!confirm(msg)) {
+		event.preventDefault()
+	}
+}
+
+templ Events(events []models.Event, siteName string, accentColor string, username string, csrfField string, flash string) {
+	@layouts.AdminShell(i18n.T(ctx, "events.title"), siteName, accentColor, username) {
+		<div class="flex justify-between items-center mb-6">
+			<h1 class="text-2xl font-bold">{ i18n.T(ctx, "events.heading") }</h1>
+			<a href="/admin/events/new" class="bg-accent text-white px-4 py-2 rounded-md hover:bg-accent-dark transition-colors">{ i18n.T(ctx, "events.new") }</a>
+		</div>
+		if flash != "" {
+			<div class="bg-green-50 text-green-700 p-3 rounded mb-4 text-sm">{ flash }</div>
+		}
+		if len(events) == 0 {
+			<p class="text-gray-500">{ i18n.T(ctx, "events.empty") }</p>
+		} else {
+			<div class="bg-white rounded-lg shadow-sm overflow-hidden">
+				<table class="w-full">
+					<thead class="bg-gray-50">
+						<tr>
+							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.title") }</th>
+							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.date") }</th>
+							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.registrations") }</th>
+							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.status") }</th>
+							<th class="text-right px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.actions") }</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-gray-100">
+						for _, event := range events {
+							<tr>
+								<td class="px-4 py-3">
+									<a href={ templ.SafeURL("/event/" + event.Slug) } class="text-accent hover:underline" target="_blank">{ event.Title }</a>
+								</td>
+								<td class="px-4 py-3 text-sm text-gray-500">{ i18n.FormatDateTimeCSV(ctx, event.EventDate) }</td>
+								<td class="px-4 py-3 text-sm">
+									if event.MaxCapacity != nil {
+										{ fmt.Sprintf("%d / %d", event.RegistrationCount, *event.MaxCapacity) }
+									} else {
+										{ fmt.Sprintf("%d", event.RegistrationCount) }
+									}
+								</td>
+								<td class="px-4 py-3 text-sm">
+									if event.RegistrationOpen {
+										<span class="inline-block px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs">{ i18n.T(ctx, "events.status.open") }</span>
+									} else {
+										<span class="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">{ i18n.T(ctx, "events.status.closed") }</span>
+									}
+								</td>
+								<td class="px-4 py-3 text-right space-x-2 text-sm">
+									<a href={ templ.SafeURL(fmt.Sprintf("/admin/events/%s/attendees", event.ID)) } class="text-gray-500 hover:text-gray-700">{ i18n.T(ctx, "events.action.attendees") }</a>
+									<a href={ templ.SafeURL(fmt.Sprintf("/admin/events/%s/edit", event.ID)) } class="text-accent hover:underline">{ i18n.T(ctx, "events.action.edit") }</a>
+									<form method="POST" action={ templ.SafeURL(fmt.Sprintf("/admin/events/%s/clone", event.ID)) } class="inline">
+										@templ.Raw(csrfField)
+										<button type="submit" class="text-gray-500 hover:text-gray-700">{ i18n.T(ctx, "events.action.clone") }</button>
+									</form>
+									<form method="POST" action={ templ.SafeURL(fmt.Sprintf("/admin/events/%s", event.ID)) } class="inline" onsubmit={ confirmSubmit(i18n.T(ctx, "events.confirm_delete")) }>
+										@templ.Raw(csrfField)
+										<input type="hidden" name="_method" value="DELETE"/>
+										<button type="submit" class="text-red-500 hover:text-red-700">{ i18n.T(ctx, "events.action.delete") }</button>
+									</form>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	}
+}

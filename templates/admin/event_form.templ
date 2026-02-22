@@ -1,0 +1,152 @@
+package admin
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/toulibre/libreregistration/internal/i18n"
+	"github.com/toulibre/libreregistration/internal/models"
+	"github.com/toulibre/libreregistration/templates/layouts"
+)
+
+templ EventForm(event *models.Event, isEdit bool, siteName string, accentColor string, username string, csrfField string, errorMsg string) {
+	@layouts.AdminShell(eventFormTitle(ctx, isEdit), siteName, accentColor, username) {
+		<h1 class="text-2xl font-bold mb-6">{ eventFormTitle(ctx, isEdit) }</h1>
+		if errorMsg != "" {
+			<div class="bg-red-50 text-red-700 p-3 rounded mb-4 text-sm">{ errorMsg }</div>
+		}
+		<form method="POST" action={ eventFormAction(event, isEdit) } enctype="multipart/form-data" class="bg-white rounded-lg shadow-sm p-6 space-y-4 max-w-2xl">
+			@templ.Raw(csrfField)
+			if isEdit {
+				<input type="hidden" name="_method" value="PUT"/>
+			}
+			<div>
+				<label for="title" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "event_form.label.title") }</label>
+				<input type="text" id="title" name="title" value={ event.Title } required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"/>
+			</div>
+			<div>
+				<label for="slug" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "event_form.label.slug") }</label>
+				<input type="text" id="slug" name="slug" value={ event.Slug } placeholder={ i18n.T(ctx, "event_form.slug_placeholder") } class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent font-mono text-sm"/>
+			</div>
+			<div>
+				<label for="description" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "event_form.label.description") }</label>
+				<textarea id="description" name="description" rows="16" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent font-mono text-sm">{ event.Description }</textarea>
+			</div>
+			<div>
+				<label for="location" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "event_form.label.location") }</label>
+				<input type="text" id="location" name="location" value={ event.Location } class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"/>
+			</div>
+			<div>
+				<label for="event_date" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "event_form.label.event_date") }</label>
+				<input type="datetime-local" id="event_date" name="event_date" value={ formatDatetimeLocal(event.EventDate) } required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"/>
+			</div>
+			<div>
+				<label for="registration_deadline" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "event_form.label.deadline") }</label>
+				<input type="datetime-local" id="registration_deadline" name="registration_deadline" value={ formatOptionalDatetimeLocal(event.RegistrationDeadline) } class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"/>
+			</div>
+			<div>
+				<label for="max_capacity" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "event_form.label.capacity") }</label>
+				<input type="number" id="max_capacity" name="max_capacity" min="1" value={ formatOptionalInt(event.MaxCapacity) } class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"/>
+			</div>
+			<div class="flex items-center gap-2">
+				<input type="checkbox" id="attendee_list_public" name="attendee_list_public" value="true" checked?={ event.AttendeeListPublic } class="rounded"/>
+				<label for="attendee_list_public" class="text-sm text-gray-700">{ i18n.T(ctx, "event_form.label.public_list") }</label>
+			</div>
+			<div class="flex items-center gap-2">
+				<input type="checkbox" id="registration_open" name="registration_open" value="true" checked?={ event.RegistrationOpen } class="rounded"/>
+				<label for="registration_open" class="text-sm text-gray-700">{ i18n.T(ctx, "event_form.label.open") }</label>
+			</div>
+			<div>
+				<label for="image" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "event_form.label.image") }</label>
+				<input type="file" id="image" name="image" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-accent/10 file:text-accent hover:file:bg-accent/20"/>
+				if isEdit && event.ImagePath != "" {
+					<div class="mt-2">
+						<p class="text-xs text-gray-500 mb-1">{ i18n.T(ctx, "event_form.image_current") }</p>
+						<img src={ "/uploads/" + event.ImagePath } class="h-32 rounded" alt=""/>
+						<label class="flex items-center gap-2 mt-1 text-sm text-gray-600">
+							<input type="checkbox" name="remove_image" value="true" class="rounded"/>
+							{ i18n.T(ctx, "event_form.remove_image") }
+						</label>
+					</div>
+				}
+			</div>
+			<div>
+				<label for="banner" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "event_form.label.banner") }</label>
+				<input type="file" id="banner" name="banner" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-accent/10 file:text-accent hover:file:bg-accent/20"/>
+				if isEdit && event.BannerPath != "" {
+					<div class="mt-2">
+						<p class="text-xs text-gray-500 mb-1">{ i18n.T(ctx, "event_form.banner_current") }</p>
+						<img src={ "/uploads/" + event.BannerPath } class="h-32 rounded" alt=""/>
+						<label class="flex items-center gap-2 mt-1 text-sm text-gray-600">
+							<input type="checkbox" name="remove_banner" value="true" class="rounded"/>
+							{ i18n.T(ctx, "event_form.remove_banner") }
+						</label>
+					</div>
+				}
+			</div>
+			<div class="grid grid-cols-2 gap-4">
+				<div>
+					<label for="latitude" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "event_form.label.latitude") }</label>
+					<input type="number" step="any" id="latitude" name="latitude" value={ formatOptionalFloat(event.Latitude) } class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"/>
+				</div>
+				<div>
+					<label for="longitude" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "event_form.label.longitude") }</label>
+					<input type="number" step="any" id="longitude" name="longitude" value={ formatOptionalFloat(event.Longitude) } class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"/>
+				</div>
+			</div>
+			<div class="flex gap-3 pt-4">
+				<button type="submit" class="bg-accent text-white px-6 py-2 rounded-md hover:bg-accent-dark transition-colors">
+					if isEdit {
+						{ i18n.T(ctx, "event_form.button.save") }
+					} else {
+						{ i18n.T(ctx, "event_form.button.create") }
+					}
+				</button>
+				<a href="/admin/events" class="px-6 py-2 text-gray-600 hover:text-gray-800">{ i18n.T(ctx, "event_form.button.cancel") }</a>
+			</div>
+		</form>
+	}
+}
+
+func eventFormTitle(ctx context.Context, isEdit bool) string {
+	if isEdit {
+		return i18n.T(ctx, "event_form.title.edit")
+	}
+	return i18n.T(ctx, "event_form.title.new")
+}
+
+func eventFormAction(event *models.Event, isEdit bool) templ.SafeURL {
+	if isEdit {
+		return templ.SafeURL(fmt.Sprintf("/admin/events/%s", event.ID))
+	}
+	return "/admin/events"
+}
+
+func formatDatetimeLocal(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return t.Format("2006-01-02T15:04")
+}
+
+func formatOptionalDatetimeLocal(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+	return t.Format("2006-01-02T15:04")
+}
+
+func formatOptionalInt(v *int) string {
+	if v == nil {
+		return ""
+	}
+	return fmt.Sprintf("%d", *v)
+}
+
+func formatOptionalFloat(v *float64) string {
+	if v == nil {
+		return ""
+	}
+	return fmt.Sprintf("%g", *v)
+}
