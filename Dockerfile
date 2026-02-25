@@ -7,9 +7,10 @@ RUN go install github.com/a-h/templ/cmd/templ@latest
 
 # Install Tailwind CSS standalone CLI (supports both amd64 and arm64)
 ARG TARGETARCH
-RUN curl -sLO "https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-${TARGETARCH}" \
-    && chmod +x "tailwindcss-linux-${TARGETARCH}" \
-    && mv "tailwindcss-linux-${TARGETARCH}" /usr/local/bin/tailwindcss
+RUN TWARCH=$([ "$TARGETARCH" = "amd64" ] && echo "x64" || echo "$TARGETARCH") \
+    && curl -sfLo /usr/local/bin/tailwindcss \
+       "https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-${TWARCH}-musl" \
+    && chmod +x /usr/local/bin/tailwindcss
 
 WORKDIR /app
 
