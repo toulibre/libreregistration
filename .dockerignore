@@ -3,4 +3,3 @@
 bin/
 uploads/
 *.db
-static/css/output.css
