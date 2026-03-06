@@ -4,6 +4,16 @@ A lightweight, self-hosted event registration platform. Let attendees sign up fo
 
 Ideal for meetups, conferences, workshops, community gatherings, or any event where you need a simple and privacy-friendly registration page.
 
+## Screenshots
+
+| Public event list | Event detail page |
+|---|---|
+| ![Home page](screenshots/01-home.png) | ![Event page](screenshots/02-event.png) |
+
+| Admin dashboard | Admin events | Admin attendees |
+|---|---|---|
+| ![Dashboard](screenshots/03-admin-dashboard.png) | ![Events](screenshots/04-admin-events.png) | ![Attendees](screenshots/05-admin-attendees.png) |
+
 ## Features
 
 - **Event management** — create, edit, duplicate, and delete events with Markdown descriptions and image uploads

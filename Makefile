@@ -2,7 +2,7 @@ export PATH := $(HOME)/go/bin:$(PATH)
 
 TAILWINDCSS := ./bin/tailwindcss
 
-.PHONY: build run dev clean generate css lint lint-go lint-js
+.PHONY: build run dev clean generate css lint lint-go lint-js screenshots
 
 # Build the application
 build: generate css
@@ -37,6 +37,10 @@ lint-go:
 # Lint JavaScript (no-op if no JS files exist yet)
 lint-js:
 	@ls static/**/*.js >/dev/null 2>&1 && npx eslint 'static/**/*.js' || echo "No JS files to lint"
+
+# Generate screenshots with test data (requires Chrome/Chromium)
+screenshots: build
+	go run ./scripts/screenshots/
 
 # Clean build artifacts
 clean:
