@@ -27,6 +27,7 @@ linters:
     paths:
       - .*_templ\.go$
       - bin
+      - scripts
       - third_party$
       - builtin$
       - examples$

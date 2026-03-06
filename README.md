@@ -1,4 +1,13 @@
+<p align="center">
+  <img src="static/logo.svg" alt="LibreRegistration logo" width="64" height="64">
+</p>
+
 # LibreRegistration
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/toulibre/libreregistration)](https://goreportcard.com/report/github.com/toulibre/libreregistration)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/toulibre/libreregistration/blob/main/LICENSE)
+[![Docker Image Version](https://img.shields.io/docker/v/ghcr.io/toulibre/libreregistration)](https://github.com/toulibre/libreregistration/pkgs/container/libreregistration)
+[![Docker Image Size](https://img.shields.io/docker/image-size/ghcr.io/toulibre/libreregistration)](https://github.com/toulibre/libreregistration/pkgs/container/libreregistration)
 
 A lightweight, self-hosted event registration platform. Let attendees sign up for your events through simple public forms — no account required, no tracking, no third-party dependencies. Deploy it on your own server in minutes with Docker.
 
