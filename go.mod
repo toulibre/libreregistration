@@ -1,6 +1,6 @@
 module github.com/toulibre/libreregistration
 
-go 1.25.0
+go 1.26
 
 require (
 	github.com/a-h/templ v0.3.1001
@@ -17,10 +17,10 @@ require (
 )
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20250724212937-08a3db8b4327 // indirect
+	github.com/chromedp/cdproto v0.0.0-20250803210736-d308e07a266d // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/go-json-experiment/json v0.0.0-20250725192818-e39067aee2d2 // indirect
+	github.com/go-json-experiment/json v0.0.0-20260214004413-d219187c3433 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.4.0 // indirect
