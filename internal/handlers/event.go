@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/toulibre/libreregistration/internal/captcha"
 	"github.com/toulibre/libreregistration/internal/i18n"
 	"github.com/toulibre/libreregistration/internal/middleware"
 	"github.com/toulibre/libreregistration/internal/models"
@@ -65,7 +66,8 @@ func (h *EventHandler) Show(w http.ResponseWriter, r *http.Request) {
 		flash = flashes[0]
 	}
 
-	public.Event(event, regs, csrfField, siteName, accentColor, flash, "").Render(r.Context(), w)
+	challenge := captcha.Generate(w, r)
+	public.Event(event, regs, csrfField, siteName, accentColor, flash, "", challenge.Question).Render(r.Context(), w)
 }
 
 // Admin routes

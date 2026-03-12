@@ -8,8 +8,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/toulibre/libreregistration/internal/captcha"
 	"github.com/toulibre/libreregistration/internal/i18n"
 	"github.com/toulibre/libreregistration/internal/middleware"
+	"github.com/toulibre/libreregistration/internal/models"
 	"github.com/toulibre/libreregistration/internal/services"
 	"github.com/toulibre/libreregistration/templates/public"
 )
@@ -37,27 +39,40 @@ func (h *RegistrationHandler) Register(w http.ResponseWriter, r *http.Request) {
 	comment := strings.TrimSpace(r.FormValue("comment"))
 
 	if name == "" {
-		siteName, accentColor := h.settings.GetSiteSettings()
-		csrfField := middleware.CSRFTemplateField(r)
-		regs, _ := h.registrations.ListByEvent(event.ID)
-		w.WriteHeader(http.StatusBadRequest)
-		public.Event(event, regs, csrfField, siteName, accentColor, "", i18n.T(r.Context(), "error.name_required")).Render(r.Context(), w)
+		h.renderError(w, r, event, i18n.T(r.Context(), "error.name_required"))
+		return
+	}
+
+	// Spam protection: honeypot
+	if captcha.IsHoneypotFilled(r) {
+		// Silently reject but pretend success to not reveal detection
+		http.Redirect(w, r, "/event/"+slug, http.StatusFound)
+		return
+	}
+
+	// Spam protection: math captcha
+	if !captcha.Verify(w, r) {
+		h.renderError(w, r, event, i18n.T(r.Context(), "error.captcha_invalid"))
 		return
 	}
 
 	_, err = h.registrations.Register(r.Context(), event.ID, name, email, comment)
 	if err != nil {
-		siteName, accentColor := h.settings.GetSiteSettings()
-		csrfField := middleware.CSRFTemplateField(r)
-		regs, _ := h.registrations.ListByEvent(event.ID)
-		w.WriteHeader(http.StatusBadRequest)
-		errMsg := mapRegistrationError(r.Context(), err)
-		public.Event(event, regs, csrfField, siteName, accentColor, "", errMsg).Render(r.Context(), w)
+		h.renderError(w, r, event, mapRegistrationError(r.Context(), err))
 		return
 	}
 
 	middleware.SetFlash(w, r, "success", i18n.T(r.Context(), "flash.registration_confirmed"))
 	http.Redirect(w, r, "/event/"+slug, http.StatusFound)
+}
+
+func (h *RegistrationHandler) renderError(w http.ResponseWriter, r *http.Request, event *models.Event, errMsg string) {
+	siteName, accentColor := h.settings.GetSiteSettings()
+	csrfField := middleware.CSRFTemplateField(r)
+	regs, _ := h.registrations.ListByEvent(event.ID)
+	challenge := captcha.Generate(w, r)
+	w.WriteHeader(http.StatusBadRequest)
+	public.Event(event, regs, csrfField, siteName, accentColor, "", errMsg, challenge.Question).Render(r.Context(), w)
 }
 
 func (h *RegistrationHandler) Cancel(w http.ResponseWriter, r *http.Request) {
@@ -84,7 +99,8 @@ func (h *RegistrationHandler) Cancel(w http.ResponseWriter, r *http.Request) {
 	regs, _ := h.registrations.ListByEvent(event.ID)
 	siteName, accentColor := h.settings.GetSiteSettings()
 	csrfField := middleware.CSRFTemplateField(r)
-	public.Event(event, regs, csrfField, siteName, accentColor, "", i18n.T(r.Context(), "flash.registration_canceled")).Render(r.Context(), w)
+	challenge := captcha.Generate(w, r)
+	public.Event(event, regs, csrfField, siteName, accentColor, "", i18n.T(r.Context(), "flash.registration_canceled"), challenge.Question).Render(r.Context(), w)
 }
 
 func mapRegistrationError(ctx context.Context, err error) string {

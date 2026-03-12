@@ -1,6 +1,6 @@
-export PATH := $(HOME)/go/bin:$(PATH)
-
+GOBIN := $(shell go env GOPATH)/bin
 TAILWINDCSS := ./bin/tailwindcss
+TEMPL := $(GOBIN)/templ
 
 .PHONY: build run dev clean generate css lint lint-go lint-js screenshots
 
@@ -17,7 +17,7 @@ dev: build run
 
 # Generate templ files
 generate:
-	templ generate
+	$(TEMPL) generate
 
 # Build CSS with Tailwind
 css:
