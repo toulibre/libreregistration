@@ -2,6 +2,6 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "eslint": "^9"
+    "eslint": "^10"
   }
 }
