@@ -86,6 +86,7 @@ func run() error {
 	r := chi.NewRouter()
 
 	// Global middleware
+	r.Use(middleware.SecurityHeaders)
 	r.Use(middleware.Logging)
 	r.Use(middleware.MethodOverride)
 	r.Use(middleware.Session(sessionStore))
