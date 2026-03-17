@@ -32,7 +32,7 @@ RUN CGO_ENABLED=0 go build -o /app/bin/server ./cmd/server
 # Runtime stage
 FROM alpine:3.21
 
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata curl
 
 WORKDIR /app
 
@@ -46,5 +46,8 @@ ENV UPLOAD_DIR=/data/uploads
 ENV PORT=8080
 
 EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/healthz || exit 1
 
 ENTRYPOINT ["./server"]

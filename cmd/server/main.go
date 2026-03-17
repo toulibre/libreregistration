@@ -77,6 +77,7 @@ func run() error {
 	}
 
 	// Initialize handlers
+	healthHandler := handlers.NewHealthHandler(db)
 	authHandler := handlers.NewAuthHandler(authService, settingsService)
 	eventHandler := handlers.NewEventHandler(eventService, registrationService, settingsService, cfg.UploadDir)
 	registrationHandler := handlers.NewRegistrationHandler(registrationService, eventService, settingsService)
@@ -84,6 +85,9 @@ func run() error {
 
 	// Router
 	r := chi.NewRouter()
+
+	// Health check (before other middleware, no session/CSRF needed)
+	r.Get("/healthz", healthHandler.Healthz)
 
 	// Global middleware
 	r.Use(middleware.SecurityHeaders)
