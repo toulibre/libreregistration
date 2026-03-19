@@ -121,6 +121,8 @@ func run() error {
 
 			r.Post("/logout", authHandler.Logout)
 			r.Get("/", adminHandler.Dashboard)
+			r.Get("/password", adminHandler.PasswordForm)
+			r.Put("/password", adminHandler.ChangePassword)
 
 			// Event management
 			r.Get("/events", eventHandler.List)

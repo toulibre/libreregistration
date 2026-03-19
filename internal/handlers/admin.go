@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -171,6 +172,53 @@ func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	middleware.SetFlash(w, r, "success", i18n.T(r.Context(), "flash.user_deleted"))
 	http.Redirect(w, r, "/admin/users", http.StatusFound)
+}
+
+func (h *AdminHandler) PasswordForm(w http.ResponseWriter, r *http.Request) {
+	siteName, accentColor := h.settings.GetSiteSettings()
+	csrfField := middleware.CSRFTemplateField(r)
+	flashes := middleware.GetFlashes(w, r, "success")
+	flash := ""
+	if len(flashes) > 0 {
+		flash = flashes[0]
+	}
+	admin.PasswordForm(siteName, accentColor, middleware.GetDisplayName(r), csrfField, "", flash).Render(r.Context(), w)
+}
+
+func (h *AdminHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	currentPassword := r.FormValue("current_password")
+	newPassword := r.FormValue("new_password")
+	confirmPassword := r.FormValue("confirm_password")
+
+	if currentPassword == "" || newPassword == "" {
+		siteName, accentColor := h.settings.GetSiteSettings()
+		csrfField := middleware.CSRFTemplateField(r)
+		admin.PasswordForm(siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "password.error.fields_required"), "").Render(r.Context(), w)
+		return
+	}
+
+	if newPassword != confirmPassword {
+		siteName, accentColor := h.settings.GetSiteSettings()
+		csrfField := middleware.CSRFTemplateField(r)
+		admin.PasswordForm(siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "password.error.mismatch"), "").Render(r.Context(), w)
+		return
+	}
+
+	userID := middleware.GetUserID(r)
+	err := h.auth.ChangePassword(userID, currentPassword, newPassword)
+	if err != nil {
+		errorKey := "error.internal"
+		if errors.Is(err, services.ErrInvalidCurrentPassword) {
+			errorKey = "password.error.current_invalid"
+		}
+		siteName, accentColor := h.settings.GetSiteSettings()
+		csrfField := middleware.CSRFTemplateField(r)
+		admin.PasswordForm(siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), errorKey), "").Render(r.Context(), w)
+		return
+	}
+
+	middleware.SetFlash(w, r, "success", i18n.T(r.Context(), "flash.password_changed"))
+	http.Redirect(w, r, "/admin/password", http.StatusFound)
 }
 
 func (h *AdminHandler) Settings(w http.ResponseWriter, r *http.Request) {

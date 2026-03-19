@@ -167,6 +167,19 @@
   "mail.confirmation_subject_fmt": "Inscription confirm\u00e9e : %s",
   "mail.confirmation_body_fmt": "Bonjour,\n\nVotre inscription \u00e0 \u00ab %s \u00bb est confirm\u00e9e.\n\nPour annuler votre inscription, rendez-vous sur :\n%s\n\nCordialement,\n%s",
 
+  "password.title": "Changer le mot de passe",
+  "password.heading": "Changer le mot de passe",
+  "password.label.current": "Mot de passe actuel",
+  "password.label.new": "Nouveau mot de passe",
+  "password.label.confirm": "Confirmer le nouveau mot de passe",
+  "password.button.save": "Modifier le mot de passe",
+  "password.error.fields_required": "Tous les champs sont requis.",
+  "password.error.mismatch": "Les mots de passe ne correspondent pas.",
+  "password.error.current_invalid": "Le mot de passe actuel est incorrect.",
+  "flash.password_changed": "Mot de passe modifié avec succès.",
+
+  "nav.password": "Mot de passe",
+
   "clone.suffix": "(copie)",
 
   "lang.switch": "English"

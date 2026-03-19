@@ -167,6 +167,19 @@
   "mail.confirmation_subject_fmt": "Registration confirmed: %s",
   "mail.confirmation_body_fmt": "Hello,\n\nYour registration for \"%s\" is confirmed.\n\nTo cancel your registration, visit:\n%s\n\nBest regards,\n%s",
 
+  "password.title": "Change password",
+  "password.heading": "Change password",
+  "password.label.current": "Current password",
+  "password.label.new": "New password",
+  "password.label.confirm": "Confirm new password",
+  "password.button.save": "Change password",
+  "password.error.fields_required": "All fields are required.",
+  "password.error.mismatch": "Passwords do not match.",
+  "password.error.current_invalid": "Current password is incorrect.",
+  "flash.password_changed": "Password changed successfully.",
+
+  "nav.password": "Password",
+
   "clone.suffix": "(copy)",
 
   "lang.switch": "Fran\u00e7ais"

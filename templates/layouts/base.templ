@@ -65,7 +65,8 @@ templ AdminShell(title string, siteName string, accentColor string, username str
 				<a href="/admin/settings" class="block px-3 py-2 rounded hover:bg-gray-700">{ i18n.T(ctx, "nav.settings") }</a>
 				<div class="mt-auto pt-8 border-t border-gray-700 text-sm text-gray-400">
 					<p class="mb-2">{ username }</p>
-					<form method="POST" action="/admin/logout">
+					<a href="/admin/password" class="text-gray-400 hover:text-white underline">{ i18n.T(ctx, "nav.password") }</a>
+					<form method="POST" action="/admin/logout" class="mt-1">
 						<button type="submit" class="text-gray-400 hover:text-white underline">{ i18n.T(ctx, "nav.logout") }</button>
 					</form>
 					<div class="mt-2">

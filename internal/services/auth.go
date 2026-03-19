@@ -99,3 +99,26 @@ func (s *AuthService) DeleteUser(id string) error {
 func (s *AuthService) UserCount() (int, error) {
 	return s.users.Count()
 }
+
+func (s *AuthService) ChangePassword(userID, currentPassword, newPassword string) error {
+	user, err := s.users.GetByID(userID)
+	if err != nil {
+		return fmt.Errorf("change password: %w", err)
+	}
+	if user == nil {
+		return fmt.Errorf("change password: user not found")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(currentPassword)); err != nil {
+		return fmt.Errorf("change password: %w", ErrInvalidCurrentPassword)
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("hash password: %w", err)
+	}
+
+	return s.users.UpdatePassword(userID, string(hash))
+}
+
+var ErrInvalidCurrentPassword = fmt.Errorf("invalid current password")
