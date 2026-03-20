@@ -1,6 +1,7 @@
 package public
 
 import (
+	"context"
 	"fmt"
 	"github.com/toulibre/libreregistration/internal/i18n"
 	"github.com/toulibre/libreregistration/internal/models"
@@ -19,10 +20,27 @@ templ Event(event *models.Event, registrations []models.Registration, csrfField 
 				if event.Location != "" {
 					<span>📍 { event.Location }</span>
 				}
-				if event.MaxCapacity != nil {
-					<span>👥 { fmt.Sprintf(i18n.T(ctx, "event.places_fmt"), event.RegistrationCount, *event.MaxCapacity) }</span>
-				}
 			</div>
+			if event.MaxCapacity != nil {
+				<div class="mb-6">
+					<div class="flex justify-between text-sm mb-1">
+						<span class="font-medium text-gray-700">👥 { fmt.Sprintf(i18n.T(ctx, "event.places_fmt"), event.RegistrationCount, *event.MaxCapacity) }</span>
+						<span class="text-gray-500">{ fmt.Sprintf("%d%%", capacityPercent(event.RegistrationCount, *event.MaxCapacity)) }</span>
+					</div>
+					<div class="w-full bg-gray-200 rounded-full h-2.5">
+						<div
+							class={ "h-2.5 rounded-full transition-all", capacityBarColor(event.RegistrationCount, *event.MaxCapacity) }
+							style={ fmt.Sprintf("width: %d%%", capacityPercent(event.RegistrationCount, *event.MaxCapacity)) }
+						></div>
+					</div>
+				</div>
+			} else {
+				if event.RegistrationCount > 0 {
+					<div class="mb-6 text-sm text-gray-500">
+						<span class="font-medium text-gray-700">👥 { attendeeCountText(ctx, event.RegistrationCount) }</span>
+					</div>
+				}
+			}
 			if event.Latitude != nil && event.Longitude != nil {
 				<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 				<div
@@ -118,4 +136,34 @@ templ Event(event *models.Event, registrations []models.Registration, csrfField 
 			}
 		</article>
 	}
+}
+
+func capacityPercent(count, max int) int {
+	if max <= 0 {
+		return 0
+	}
+	p := (count * 100) / max
+	if p > 100 {
+		return 100
+	}
+	return p
+}
+
+func capacityBarColor(count, max int) string {
+	p := capacityPercent(count, max)
+	switch {
+	case p >= 100:
+		return "bg-red-500"
+	case p >= 75:
+		return "bg-yellow-500"
+	default:
+		return "bg-accent"
+	}
+}
+
+func attendeeCountText(ctx context.Context, count int) string {
+	if count == 1 {
+		return i18n.Tf(ctx, "attendees.count.one", count)
+	}
+	return i18n.Tf(ctx, "attendees.count.other", count)
 }
