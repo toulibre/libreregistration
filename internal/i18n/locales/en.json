@@ -21,6 +21,7 @@
   "event.participants_fmt": "Participants (%d)",
   "event.places_fmt": "%d / %d places",
   "event.location_map": "Location",
+  "event.add_to_calendar": "Add to calendar",
 
   "login.title": "Login",
   "login.heading": "Login",

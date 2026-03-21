@@ -86,9 +86,6 @@ func run() error {
 	// Router
 	r := chi.NewRouter()
 
-	// Health check (before other middleware, no session/CSRF needed)
-	r.Get("/healthz", healthHandler.Healthz)
-
 	// Global middleware
 	r.Use(middleware.SecurityHeaders)
 	r.Use(middleware.Logging)
@@ -96,6 +93,9 @@ func run() error {
 	r.Use(middleware.Session(sessionStore))
 	r.Use(middleware.Locale)
 	r.Use(middleware.CSRF([]byte(cfg.CSRFKey), false))
+
+	// Health check (no session/CSRF needed, but must be after Use() calls for chi)
+	r.Get("/healthz", healthHandler.Healthz)
 
 	// Static files
 	staticFS := http.Dir("static")
@@ -107,6 +107,7 @@ func run() error {
 	// Public routes
 	r.Get("/", eventHandler.Home)
 	r.Get("/event/{slug}", eventHandler.Show)
+	r.Get("/event/{slug}/ical", eventHandler.ICal)
 	r.Post("/event/{slug}/register", registrationHandler.Register)
 	r.Get("/cancel/{token}", registrationHandler.Cancel)
 

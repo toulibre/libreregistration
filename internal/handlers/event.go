@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -68,6 +69,55 @@ func (h *EventHandler) Show(w http.ResponseWriter, r *http.Request) {
 
 	challenge := captcha.Generate(w, r)
 	public.Event(event, regs, csrfField, siteName, accentColor, flash, "", challenge.Question).Render(r.Context(), w)
+}
+
+func (h *EventHandler) ICal(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+	event, err := h.events.GetBySlug(slug)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	if event == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	uid := event.ID + "@libreregistration"
+	dtStart := event.EventDate.UTC().Format("20060102T150405Z")
+	dtEnd := event.EventDate.Add(2 * time.Hour).UTC().Format("20060102T150405Z")
+	now := time.Now().UTC().Format("20060102T150405Z")
+
+	var b strings.Builder
+	b.WriteString("BEGIN:VCALENDAR\r\n")
+	b.WriteString("VERSION:2.0\r\n")
+	b.WriteString("PRODID:-//LibreRegistration//EN\r\n")
+	b.WriteString("BEGIN:VEVENT\r\n")
+	b.WriteString("UID:" + uid + "\r\n")
+	b.WriteString("DTSTAMP:" + now + "\r\n")
+	b.WriteString("DTSTART:" + dtStart + "\r\n")
+	b.WriteString("DTEND:" + dtEnd + "\r\n")
+	b.WriteString("SUMMARY:" + icalEscape(event.Title) + "\r\n")
+	if event.Location != "" {
+		b.WriteString("LOCATION:" + icalEscape(event.Location) + "\r\n")
+	}
+	if event.Description != "" {
+		b.WriteString("DESCRIPTION:" + icalEscape(event.Description) + "\r\n")
+	}
+	b.WriteString("END:VEVENT\r\n")
+	b.WriteString("END:VCALENDAR\r\n")
+
+	w.Header().Set("Content-Type", "text/calendar; charset=utf-8")
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.ics"`, event.Slug))
+	w.Write([]byte(b.String()))
+}
+
+func icalEscape(s string) string {
+	s = strings.ReplaceAll(s, "\\", "\\\\")
+	s = strings.ReplaceAll(s, ";", "\\;")
+	s = strings.ReplaceAll(s, ",", "\\,")
+	s = strings.ReplaceAll(s, "\n", "\\n")
+	return s
 }
 
 // Admin routes
