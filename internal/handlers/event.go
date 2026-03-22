@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 	"github.com/toulibre/libreregistration/internal/models"
 	"github.com/toulibre/libreregistration/internal/services"
 	"github.com/toulibre/libreregistration/templates/admin"
+	"github.com/toulibre/libreregistration/templates/layouts"
 	"github.com/toulibre/libreregistration/templates/public"
 )
 
@@ -24,10 +26,11 @@ type EventHandler struct {
 	registrations *services.RegistrationService
 	settings      *services.SettingsService
 	uploadDir     string
+	baseURL       string
 }
 
-func NewEventHandler(events *services.EventService, registrations *services.RegistrationService, settings *services.SettingsService, uploadDir string) *EventHandler {
-	return &EventHandler{events: events, registrations: registrations, settings: settings, uploadDir: uploadDir}
+func NewEventHandler(events *services.EventService, registrations *services.RegistrationService, settings *services.SettingsService, uploadDir string, baseURL string) *EventHandler {
+	return &EventHandler{events: events, registrations: registrations, settings: settings, uploadDir: uploadDir, baseURL: baseURL}
 }
 
 // Public routes
@@ -67,8 +70,24 @@ func (h *EventHandler) Show(w http.ResponseWriter, r *http.Request) {
 		flash = flashes[0]
 	}
 
+	og := &layouts.OGMeta{
+		Title: event.Title,
+		Type:  "article",
+		URL:   h.baseURL + "/event/" + event.Slug,
+	}
+	if event.Description != "" {
+		og.Description = truncate(event.Description, 200)
+	}
+	if event.BannerPath != "" {
+		og.Image = h.baseURL + "/uploads/" + event.BannerPath
+	} else if event.ImagePath != "" {
+		og.Image = h.baseURL + "/uploads/" + event.ImagePath
+	}
+
+	jsonLD := buildEventJSONLD(event, h.baseURL, siteName)
+
 	challenge := captcha.Generate(w, r)
-	public.Event(event, regs, csrfField, siteName, accentColor, flash, "", challenge.Question).Render(r.Context(), w)
+	public.Event(event, regs, csrfField, siteName, accentColor, flash, "", challenge.Question, og, jsonLD).Render(r.Context(), w)
 }
 
 func (h *EventHandler) ICal(w http.ResponseWriter, r *http.Request) {
@@ -395,4 +414,75 @@ func errMissing(ctx context.Context, fieldKey string) error {
 
 func errInvalid(ctx context.Context, fieldKey string) error {
 	return &validationError{msg: i18n.Tf(ctx, "error.field_invalid_fmt", i18n.T(ctx, fieldKey))}
+}
+
+func buildEventJSONLD(event *models.Event, baseURL string, siteName string) string {
+	ld := map[string]any{
+		"@context":  "https://schema.org",
+		"@type":     "Event",
+		"name":      event.Title,
+		"startDate": event.EventDate.Format(time.RFC3339),
+		"url":       baseURL + "/event/" + event.Slug,
+		"organizer": map[string]any{
+			"@type": "Organization",
+			"name":  siteName,
+		},
+	}
+
+	if event.Description != "" {
+		ld["description"] = truncate(event.Description, 300)
+	}
+
+	if event.Location != "" {
+		location := map[string]any{
+			"@type":   "Place",
+			"name":    event.Location,
+			"address": event.Location,
+		}
+		if event.Latitude != nil && event.Longitude != nil {
+			location["geo"] = map[string]any{
+				"@type":     "GeoCoordinates",
+				"latitude":  *event.Latitude,
+				"longitude": *event.Longitude,
+			}
+		}
+		ld["location"] = location
+	}
+
+	if event.BannerPath != "" {
+		ld["image"] = baseURL + "/uploads/" + event.BannerPath
+	} else if event.ImagePath != "" {
+		ld["image"] = baseURL + "/uploads/" + event.ImagePath
+	}
+
+	if event.MaxCapacity != nil {
+		ld["maximumAttendeeCapacity"] = *event.MaxCapacity
+		remaining := *event.MaxCapacity - event.RegistrationCount
+		if remaining < 0 {
+			remaining = 0
+		}
+		ld["remainingAttendeeCapacity"] = remaining
+	}
+
+	if event.RegistrationOpen {
+		ld["eventStatus"] = "https://schema.org/EventScheduled"
+		if event.MaxCapacity != nil && event.RegistrationCount >= *event.MaxCapacity {
+			ld["eventAttendanceMode"] = "https://schema.org/OfflineEventAttendanceMode"
+		}
+	}
+
+	data, err := json.Marshal(ld)
+	if err != nil {
+		return ""
+	}
+	return string(data)
+}
+
+func truncate(s string, maxLen int) string {
+	// Truncate at rune boundary, strip markdown-style formatting isn't needed for OG
+	runes := []rune(s)
+	if len(runes) <= maxLen {
+		return s
+	}
+	return string(runes[:maxLen]) + "…"
 }

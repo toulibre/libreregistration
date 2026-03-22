@@ -8,8 +8,11 @@ import (
 	"github.com/toulibre/libreregistration/templates/layouts"
 )
 
-templ Event(event *models.Event, registrations []models.Registration, csrfField string, siteName string, accentColor string, flash string, cancelMsg string, captchaQuestion string) {
-	@layouts.PublicShell(event.Title, siteName, accentColor) {
+templ Event(event *models.Event, registrations []models.Registration, csrfField string, siteName string, accentColor string, flash string, cancelMsg string, captchaQuestion string, og *layouts.OGMeta, jsonLD string) {
+	@layouts.PublicShellOG(event.Title, siteName, accentColor, og) {
+		if jsonLD != "" {
+			@templ.Raw(`<script type="application/ld+json">` + jsonLD + `</script>`)
+		}
 		<article>
 			if event.BannerPath != "" {
 				<img src={ "/uploads/" + event.BannerPath } class="w-full h-64 object-cover rounded-lg mb-6" alt=""/>

@@ -6,7 +6,7 @@ import (
 )
 
 templ Login(siteName string, accentColor string, csrfField string, errorMsg string) {
-	@layouts.Base(i18n.T(ctx, "login.title"), siteName, accentColor) {
+	@layouts.Base(i18n.T(ctx, "login.title"), siteName, accentColor, nil) {
 		<div class="min-h-screen flex items-center justify-center">
 			<div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
 				<div class="flex justify-center mb-4 text-accent">

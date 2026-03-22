@@ -79,7 +79,7 @@ func run() error {
 	// Initialize handlers
 	healthHandler := handlers.NewHealthHandler(db)
 	authHandler := handlers.NewAuthHandler(authService, settingsService)
-	eventHandler := handlers.NewEventHandler(eventService, registrationService, settingsService, cfg.UploadDir)
+	eventHandler := handlers.NewEventHandler(eventService, registrationService, settingsService, cfg.UploadDir, cfg.BaseURL)
 	registrationHandler := handlers.NewRegistrationHandler(registrationService, eventService, settingsService)
 	adminHandler := handlers.NewAdminHandler(eventService, registrationService, authService, settingsService)
 

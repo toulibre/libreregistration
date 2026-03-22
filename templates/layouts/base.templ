@@ -2,7 +2,15 @@ package layouts
 
 import "github.com/toulibre/libreregistration/internal/i18n"
 
-templ Base(title string, siteName string, accentColor string) {
+type OGMeta struct {
+	Title       string
+	Description string
+	Image       string
+	URL         string
+	Type        string
+}
+
+templ Base(title string, siteName string, accentColor string, og *OGMeta) {
 	<!DOCTYPE html>
 	<html lang={ i18n.HTMLLang(ctx) } style={ accentColorStyle(accentColor) }>
 		<head>
@@ -10,6 +18,25 @@ templ Base(title string, siteName string, accentColor string) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>{ title } — { siteName }</title>
 			<link rel="stylesheet" href="/static/css/output.css"/>
+			if og != nil {
+				<meta property="og:title" content={ og.Title }/>
+				<meta property="og:site_name" content={ siteName }/>
+				if og.Type != "" {
+					<meta property="og:type" content={ og.Type }/>
+				} else {
+					<meta property="og:type" content="website"/>
+				}
+				if og.Description != "" {
+					<meta property="og:description" content={ og.Description }/>
+					<meta name="description" content={ og.Description }/>
+				}
+				if og.Image != "" {
+					<meta property="og:image" content={ og.Image }/>
+				}
+				if og.URL != "" {
+					<meta property="og:url" content={ og.URL }/>
+				}
+			}
 		</head>
 		<body class="min-h-screen bg-gray-50 text-gray-900">
 			{ children... }
@@ -25,7 +52,13 @@ func accentColorStyle(color string) string {
 }
 
 templ PublicShell(title string, siteName string, accentColor string) {
-	@Base(title, siteName, accentColor) {
+	@PublicShellOG(title, siteName, accentColor, nil) {
+		{ children... }
+	}
+}
+
+templ PublicShellOG(title string, siteName string, accentColor string, og *OGMeta) {
+	@Base(title, siteName, accentColor, og) {
 		<header class="bg-white shadow-sm">
 			<div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
 				<a href="/" class="text-xl font-bold text-accent hover:text-accent-dark">{ siteName }</a>
@@ -52,7 +85,7 @@ templ Logo(size string) {
 }
 
 templ AdminShell(title string, siteName string, accentColor string, username string) {
-	@Base(title, siteName, accentColor) {
+	@Base(title, siteName, accentColor, nil) {
 		<div class="flex min-h-screen">
 			<aside class="w-64 bg-gray-900 text-gray-100 p-4 space-y-2">
 				<a href="/admin/" class="flex items-center gap-2 text-lg font-bold mb-6 text-white">
