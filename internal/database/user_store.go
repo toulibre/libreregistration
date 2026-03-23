@@ -16,11 +16,11 @@ func NewUserStore(db *DB) *UserStore {
 	return &UserStore{db: db}
 }
 
-const userColumns = "id, username, name, password_hash, role, created_at, updated_at"
+const userColumns = "id, username, name, email, avatar_path, password_hash, role, created_at, updated_at"
 
 func scanUser(row interface{ Scan(...interface{}) error }) (*models.User, error) {
 	var u models.User
-	err := row.Scan(&u.ID, &u.Username, &u.Name, &u.PasswordHash, &u.Role, &u.CreatedAt, &u.UpdatedAt)
+	err := row.Scan(&u.ID, &u.Username, &u.Name, &u.Email, &u.AvatarPath, &u.PasswordHash, &u.Role, &u.CreatedAt, &u.UpdatedAt)
 	return &u, err
 }
 
@@ -52,8 +52,8 @@ func (s *UserStore) GetByID(id string) (*models.User, error) {
 
 func (s *UserStore) Create(u *models.User) error {
 	_, err := s.db.Exec(
-		"INSERT INTO users (id, username, name, password_hash, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-		u.ID, u.Username, u.Name, u.PasswordHash, u.Role, u.CreatedAt, u.UpdatedAt,
+		"INSERT INTO users (id, username, name, email, avatar_path, password_hash, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		u.ID, u.Username, u.Name, u.Email, u.AvatarPath, u.PasswordHash, u.Role, u.CreatedAt, u.UpdatedAt,
 	)
 	if err != nil {
 		return fmt.Errorf("create user: %w", err)
@@ -95,8 +95,8 @@ func (s *UserStore) Count() (int, error) {
 
 func (s *UserStore) Update(u *models.User) error {
 	_, err := s.db.Exec(
-		"UPDATE users SET username = ?, name = ?, role = ?, updated_at = ? WHERE id = ?",
-		u.Username, u.Name, u.Role, time.Now(), u.ID,
+		"UPDATE users SET username = ?, name = ?, email = ?, avatar_path = ?, role = ?, updated_at = ? WHERE id = ?",
+		u.Username, u.Name, u.Email, u.AvatarPath, u.Role, time.Now(), u.ID,
 	)
 	if err != nil {
 		return fmt.Errorf("update user: %w", err)

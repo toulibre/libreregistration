@@ -68,7 +68,7 @@ func (s *AuthService) SeedAdmin(username, password string) error {
 	return nil
 }
 
-func (s *AuthService) CreateUser(username, name, password string, role models.Role) error {
+func (s *AuthService) CreateUser(username, name, email, avatarPath, password string, role models.Role) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("hash password: %w", err)
@@ -79,6 +79,8 @@ func (s *AuthService) CreateUser(username, name, password string, role models.Ro
 		ID:           uuid.New().String(),
 		Username:     username,
 		Name:         name,
+		Email:        email,
+		AvatarPath:   avatarPath,
 		PasswordHash: string(hash),
 		Role:         role,
 		CreatedAt:    now,
@@ -96,7 +98,7 @@ func (s *AuthService) GetUser(id string) (*models.User, error) {
 	return s.users.GetByID(id)
 }
 
-func (s *AuthService) UpdateUser(id, username, name, password string, role models.Role) error {
+func (s *AuthService) UpdateUser(id, username, name, email, avatarPath, password string, role models.Role) error {
 	user, err := s.users.GetByID(id)
 	if err != nil {
 		return fmt.Errorf("update user: %w", err)
@@ -107,6 +109,8 @@ func (s *AuthService) UpdateUser(id, username, name, password string, role model
 
 	user.Username = username
 	user.Name = name
+	user.Email = email
+	user.AvatarPath = avatarPath
 	user.Role = role
 
 	if err := s.users.Update(user); err != nil {

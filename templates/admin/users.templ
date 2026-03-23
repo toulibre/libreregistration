@@ -2,10 +2,19 @@ package admin
 
 import (
 	"fmt"
+	"strings"
 	"github.com/toulibre/libreregistration/internal/i18n"
 	"github.com/toulibre/libreregistration/internal/models"
 	"github.com/toulibre/libreregistration/templates/layouts"
 )
+
+func userInitial(u models.User) string {
+	name := u.DisplayName()
+	if name == "" {
+		return "?"
+	}
+	return strings.ToUpper(string([]rune(name)[0]))
+}
 
 templ Users(users []models.User, siteName string, accentColor string, displayName string, csrfField string, flash string) {
 	@layouts.AdminShell(i18n.T(ctx, "users.title"), siteName, accentColor, displayName) {
@@ -22,6 +31,7 @@ templ Users(users []models.User, siteName string, accentColor string, displayNam
 					<tr>
 						<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "users.col.login") }</th>
 						<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "users.col.name") }</th>
+						<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "users.col.email") }</th>
 						<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "users.col.role") }</th>
 						<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "users.col.created_at") }</th>
 						<th class="text-right px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "users.col.actions") }</th>
@@ -30,8 +40,20 @@ templ Users(users []models.User, siteName string, accentColor string, displayNam
 				<tbody class="divide-y divide-gray-100">
 					for _, user := range users {
 						<tr>
-							<td class="px-4 py-3 text-sm text-gray-500">{ user.Username }</td>
+							<td class="px-4 py-3 text-sm text-gray-500">
+								<div class="flex items-center gap-2">
+									if user.AvatarPath != "" {
+										<img src={ "/uploads/" + user.AvatarPath } class="w-8 h-8 rounded-full object-cover" alt=""/>
+									} else {
+										<div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-medium">
+											{ userInitial(user) }
+										</div>
+									}
+									{ user.Username }
+								</div>
+							</td>
 							<td class="px-4 py-3 font-medium">{ user.DisplayName() }</td>
+							<td class="px-4 py-3 text-sm text-gray-500">{ user.Email }</td>
 							<td class="px-4 py-3 text-sm">
 								if user.Role == "admin" {
 									<span class="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">{ i18n.T(ctx, "users.role.admin") }</span>

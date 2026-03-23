@@ -81,7 +81,7 @@ func run() error {
 	authHandler := handlers.NewAuthHandler(authService, settingsService)
 	eventHandler := handlers.NewEventHandler(eventService, registrationService, settingsService, cfg.UploadDir, cfg.BaseURL)
 	registrationHandler := handlers.NewRegistrationHandler(registrationService, eventService, settingsService)
-	adminHandler := handlers.NewAdminHandler(eventService, registrationService, authService, settingsService)
+	adminHandler := handlers.NewAdminHandler(eventService, registrationService, authService, settingsService, cfg.UploadDir)
 
 	// Router
 	r := chi.NewRouter()

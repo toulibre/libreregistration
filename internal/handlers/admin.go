@@ -20,10 +20,11 @@ type AdminHandler struct {
 	registrations *services.RegistrationService
 	auth          *services.AuthService
 	settings      *services.SettingsService
+	uploadDir     string
 }
 
-func NewAdminHandler(events *services.EventService, registrations *services.RegistrationService, auth *services.AuthService, settings *services.SettingsService) *AdminHandler {
-	return &AdminHandler{events: events, registrations: registrations, auth: auth, settings: settings}
+func NewAdminHandler(events *services.EventService, registrations *services.RegistrationService, auth *services.AuthService, settings *services.SettingsService, uploadDir string) *AdminHandler {
+	return &AdminHandler{events: events, registrations: registrations, auth: auth, settings: settings, uploadDir: uploadDir}
 }
 
 func (h *AdminHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
@@ -128,15 +129,21 @@ func (h *AdminHandler) NewUserForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AdminHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		r.ParseForm()
+	}
+
 	username := r.FormValue("username")
 	name := r.FormValue("name")
+	email := r.FormValue("email")
 	password := r.FormValue("password")
 	role := models.Role(r.FormValue("role"))
 
 	if username == "" || password == "" {
 		siteName, accentColor := h.settings.GetSiteSettings()
 		csrfField := middleware.CSRFTemplateField(r)
-		user := &models.User{Username: username, Name: name, Role: role}
+		user := &models.User{Username: username, Name: name, Email: email, Role: role}
 		admin.UserForm(user, false, siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.login_password_required")).Render(r.Context(), w)
 		return
 	}
@@ -145,10 +152,20 @@ func (h *AdminHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		role = models.RoleManager
 	}
 
-	if err := h.auth.CreateUser(username, name, password, role); err != nil {
+	avatarFile, err := saveUpload(r, "avatar", h.uploadDir)
+	if err != nil {
 		siteName, accentColor := h.settings.GetSiteSettings()
 		csrfField := middleware.CSRFTemplateField(r)
-		user := &models.User{Username: username, Name: name, Role: role}
+		user := &models.User{Username: username, Name: name, Email: email, Role: role}
+		admin.UserForm(user, false, siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.upload_invalid_type")).Render(r.Context(), w)
+		return
+	}
+
+	if err := h.auth.CreateUser(username, name, email, avatarFile, password, role); err != nil {
+		deleteUpload(h.uploadDir, avatarFile)
+		siteName, accentColor := h.settings.GetSiteSettings()
+		csrfField := middleware.CSRFTemplateField(r)
+		user := &models.User{Username: username, Name: name, Email: email, Role: role}
 		admin.UserForm(user, false, siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.creation_failed")).Render(r.Context(), w)
 		return
 	}
@@ -171,14 +188,26 @@ func (h *AdminHandler) EditUserForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AdminHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		r.ParseForm()
+	}
+
 	id := chi.URLParam(r, "id")
 	username := r.FormValue("username")
 	name := r.FormValue("name")
+	email := r.FormValue("email")
 	password := r.FormValue("password")
 	role := models.Role(r.FormValue("role"))
 
+	existing, err := h.auth.GetUser(id)
+	if err != nil || existing == nil {
+		http.NotFound(w, r)
+		return
+	}
+
 	if username == "" {
-		user := &models.User{ID: id, Username: username, Name: name, Role: role}
+		user := &models.User{ID: id, Username: username, Name: name, Email: email, AvatarPath: existing.AvatarPath, Role: role}
 		siteName, accentColor := h.settings.GetSiteSettings()
 		csrfField := middleware.CSRFTemplateField(r)
 		admin.UserForm(user, true, siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.username_required")).Render(r.Context(), w)
@@ -189,8 +218,27 @@ func (h *AdminHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		role = models.RoleManager
 	}
 
-	if err := h.auth.UpdateUser(id, username, name, password, role); err != nil {
-		user := &models.User{ID: id, Username: username, Name: name, Role: role}
+	// Handle avatar upload
+	avatarPath := existing.AvatarPath
+	avatarFile, err := saveUpload(r, "avatar", h.uploadDir)
+	if err != nil {
+		user := &models.User{ID: id, Username: username, Name: name, Email: email, AvatarPath: existing.AvatarPath, Role: role}
+		siteName, accentColor := h.settings.GetSiteSettings()
+		csrfField := middleware.CSRFTemplateField(r)
+		admin.UserForm(user, true, siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.upload_invalid_type")).Render(r.Context(), w)
+		return
+	}
+	switch {
+	case avatarFile != "":
+		deleteUpload(h.uploadDir, existing.AvatarPath)
+		avatarPath = avatarFile
+	case r.FormValue("remove_avatar") == "true":
+		deleteUpload(h.uploadDir, existing.AvatarPath)
+		avatarPath = ""
+	}
+
+	if err := h.auth.UpdateUser(id, username, name, email, avatarPath, password, role); err != nil {
+		user := &models.User{ID: id, Username: username, Name: name, Email: email, AvatarPath: avatarPath, Role: role}
 		siteName, accentColor := h.settings.GetSiteSettings()
 		csrfField := middleware.CSRFTemplateField(r)
 		admin.UserForm(user, true, siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.update_failed")).Render(r.Context(), w)
