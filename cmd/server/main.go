@@ -143,6 +143,8 @@ func run() error {
 				r.Get("/users", adminHandler.Users)
 				r.Get("/users/new", adminHandler.NewUserForm)
 				r.Post("/users", adminHandler.CreateUser)
+				r.Get("/users/{id}/edit", adminHandler.EditUserForm)
+				r.Put("/users/{id}", adminHandler.UpdateUser)
 				r.Delete("/users/{id}", adminHandler.DeleteUser)
 			})
 

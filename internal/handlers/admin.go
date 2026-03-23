@@ -124,7 +124,7 @@ func (h *AdminHandler) Users(w http.ResponseWriter, r *http.Request) {
 func (h *AdminHandler) NewUserForm(w http.ResponseWriter, r *http.Request) {
 	siteName, accentColor := h.settings.GetSiteSettings()
 	csrfField := middleware.CSRFTemplateField(r)
-	admin.UserForm(siteName, accentColor, middleware.GetDisplayName(r), csrfField, "").Render(r.Context(), w)
+	admin.UserForm(&models.User{}, false, siteName, accentColor, middleware.GetDisplayName(r), csrfField, "").Render(r.Context(), w)
 }
 
 func (h *AdminHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -136,7 +136,8 @@ func (h *AdminHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if username == "" || password == "" {
 		siteName, accentColor := h.settings.GetSiteSettings()
 		csrfField := middleware.CSRFTemplateField(r)
-		admin.UserForm(siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.login_password_required")).Render(r.Context(), w)
+		user := &models.User{Username: username, Name: name, Role: role}
+		admin.UserForm(user, false, siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.login_password_required")).Render(r.Context(), w)
 		return
 	}
 
@@ -147,11 +148,56 @@ func (h *AdminHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if err := h.auth.CreateUser(username, name, password, role); err != nil {
 		siteName, accentColor := h.settings.GetSiteSettings()
 		csrfField := middleware.CSRFTemplateField(r)
-		admin.UserForm(siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.creation_failed")).Render(r.Context(), w)
+		user := &models.User{Username: username, Name: name, Role: role}
+		admin.UserForm(user, false, siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.creation_failed")).Render(r.Context(), w)
 		return
 	}
 
 	middleware.SetFlash(w, r, "success", i18n.T(r.Context(), "flash.user_created"))
+	http.Redirect(w, r, "/admin/users", http.StatusFound)
+}
+
+func (h *AdminHandler) EditUserForm(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	user, err := h.auth.GetUser(id)
+	if err != nil || user == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	siteName, accentColor := h.settings.GetSiteSettings()
+	csrfField := middleware.CSRFTemplateField(r)
+	admin.UserForm(user, true, siteName, accentColor, middleware.GetDisplayName(r), csrfField, "").Render(r.Context(), w)
+}
+
+func (h *AdminHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	username := r.FormValue("username")
+	name := r.FormValue("name")
+	password := r.FormValue("password")
+	role := models.Role(r.FormValue("role"))
+
+	if username == "" {
+		user := &models.User{ID: id, Username: username, Name: name, Role: role}
+		siteName, accentColor := h.settings.GetSiteSettings()
+		csrfField := middleware.CSRFTemplateField(r)
+		admin.UserForm(user, true, siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.username_required")).Render(r.Context(), w)
+		return
+	}
+
+	if role != models.RoleAdmin && role != models.RoleManager {
+		role = models.RoleManager
+	}
+
+	if err := h.auth.UpdateUser(id, username, name, password, role); err != nil {
+		user := &models.User{ID: id, Username: username, Name: name, Role: role}
+		siteName, accentColor := h.settings.GetSiteSettings()
+		csrfField := middleware.CSRFTemplateField(r)
+		admin.UserForm(user, true, siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.update_failed")).Render(r.Context(), w)
+		return
+	}
+
+	middleware.SetFlash(w, r, "success", i18n.T(r.Context(), "flash.user_updated"))
 	http.Redirect(w, r, "/admin/users", http.StatusFound)
 }
 

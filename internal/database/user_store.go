@@ -93,6 +93,17 @@ func (s *UserStore) Count() (int, error) {
 	return count, err
 }
 
+func (s *UserStore) Update(u *models.User) error {
+	_, err := s.db.Exec(
+		"UPDATE users SET username = ?, name = ?, role = ?, updated_at = ? WHERE id = ?",
+		u.Username, u.Name, u.Role, time.Now(), u.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("update user: %w", err)
+	}
+	return nil
+}
+
 func (s *UserStore) UpdatePassword(id string, passwordHash string) error {
 	_, err := s.db.Exec(
 		"UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?",

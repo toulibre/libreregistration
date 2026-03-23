@@ -40,7 +40,8 @@ templ Users(users []models.User, siteName string, accentColor string, displayNam
 								}
 							</td>
 							<td class="px-4 py-3 text-sm text-gray-500">{ i18n.FormatDate(ctx, user.CreatedAt) }</td>
-							<td class="px-4 py-3 text-right">
+							<td class="px-4 py-3 text-right space-x-3">
+								<a href={ templ.SafeURL(fmt.Sprintf("/admin/users/%s/edit", user.ID)) } class="text-accent hover:text-accent-dark text-sm">{ i18n.T(ctx, "users.action.edit") }</a>
 								<form method="POST" action={ templ.SafeURL(fmt.Sprintf("/admin/users/%s", user.ID)) } class="inline" onsubmit={ confirmSubmit(i18n.T(ctx, "users.confirm_delete")) }>
 									@templ.Raw(csrfField)
 									<input type="hidden" name="_method" value="DELETE"/>

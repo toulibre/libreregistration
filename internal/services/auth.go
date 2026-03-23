@@ -92,6 +92,41 @@ func (s *AuthService) ListUsers() ([]models.User, error) {
 	return s.users.List()
 }
 
+func (s *AuthService) GetUser(id string) (*models.User, error) {
+	return s.users.GetByID(id)
+}
+
+func (s *AuthService) UpdateUser(id, username, name, password string, role models.Role) error {
+	user, err := s.users.GetByID(id)
+	if err != nil {
+		return fmt.Errorf("update user: %w", err)
+	}
+	if user == nil {
+		return fmt.Errorf("update user: not found")
+	}
+
+	user.Username = username
+	user.Name = name
+	user.Role = role
+
+	if err := s.users.Update(user); err != nil {
+		return err
+	}
+
+	// Update password only if a new one was provided
+	if password != "" {
+		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			return fmt.Errorf("hash password: %w", err)
+		}
+		if err := s.users.UpdatePassword(id, string(hash)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *AuthService) DeleteUser(id string) error {
 	return s.users.Delete(id)
 }
