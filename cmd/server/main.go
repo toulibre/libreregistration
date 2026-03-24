@@ -82,6 +82,7 @@ func run() error {
 	eventHandler := handlers.NewEventHandler(eventService, registrationService, settingsService, cfg.UploadDir, cfg.BaseURL)
 	registrationHandler := handlers.NewRegistrationHandler(registrationService, eventService, settingsService)
 	adminHandler := handlers.NewAdminHandler(eventService, registrationService, authService, settingsService, cfg.UploadDir)
+	accountHandler := handlers.NewAccountHandler(authService, registrationService, settingsService, cfg.UploadDir)
 
 	// Router
 	r := chi.NewRouter()
@@ -93,8 +94,9 @@ func run() error {
 	r.Use(middleware.Session(sessionStore))
 	r.Use(middleware.Locale)
 	r.Use(middleware.CSRF([]byte(cfg.CSRFKey), false))
+	r.Use(middleware.InjectSelfRegistration(settingsService.AllowSelfRegistration))
 
-	// Health check (no session/CSRF needed, but must be after Use() calls for chi)
+	// Health check
 	r.Get("/healthz", healthHandler.Healthz)
 
 	// Static files
@@ -111,16 +113,39 @@ func run() error {
 	r.Post("/event/{slug}/register", registrationHandler.Register)
 	r.Get("/cancel/{token}", registrationHandler.Cancel)
 
+	// Self-registration
+	r.Get("/register", authHandler.RegisterForm)
+	r.Post("/register", authHandler.RegisterUser)
+
+	// Logout (any authenticated user)
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RequireAuth)
+		r.Post("/logout", authHandler.Logout)
+	})
+
+	// User account area (any authenticated user)
+	r.Route("/account", func(r chi.Router) {
+		r.Use(middleware.RequireAuth)
+
+		r.Get("/", accountHandler.Dashboard)
+		r.Get("/profile", accountHandler.ProfileForm)
+		r.Put("/profile", accountHandler.UpdateProfile)
+		r.Get("/password", accountHandler.PasswordForm)
+		r.Put("/password", accountHandler.ChangePassword)
+		r.Get("/delete", accountHandler.DeleteForm)
+		r.Post("/delete", accountHandler.DeleteAccount)
+	})
+
 	// Admin routes
 	r.Route("/admin", func(r chi.Router) {
 		r.Get("/login", authHandler.LoginForm)
 		r.Post("/login", authHandler.Login)
 
-		// Authenticated admin routes
+		// Authenticated staff routes (admin + manager)
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.RequireAuth)
+			r.Use(middleware.RequireStaff)
 
-			r.Post("/logout", authHandler.Logout)
 			r.Get("/", adminHandler.Dashboard)
 			r.Get("/password", adminHandler.PasswordForm)
 			r.Put("/password", adminHandler.ChangePassword)

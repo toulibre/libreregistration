@@ -21,6 +21,12 @@ templ Settings(settings []models.Setting, siteName string, accentColor string, u
 					<label for={ s.Key } class="block text-sm font-medium text-gray-700 mb-1">{ settingLabel(ctx, s.Key) }</label>
 					if s.Key == "accent_color" {
 						<input type="color" id={ s.Key } name={ s.Key } value={ s.Value } class="h-10 w-20 border border-gray-300 rounded-md"/>
+					} else if s.Key == "allow_self_registration" {
+						<label class="flex items-center gap-2 cursor-pointer">
+							<input type="hidden" name={ s.Key } value="false"/>
+							<input type="checkbox" name={ s.Key } value="true" checked?={ s.Value == "true" } class="rounded border-gray-300 text-accent focus:ring-accent"/>
+							<span class="text-sm text-gray-600">{ i18n.T(ctx, "settings.label.allow_self_registration.help") }</span>
+						</label>
 					} else {
 						<input type="text" id={ s.Key } name={ s.Key } value={ s.Value } class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent"/>
 					}
@@ -39,6 +45,8 @@ func settingLabel(ctx context.Context, key string) string {
 		return i18n.T(ctx, "settings.label.site_name")
 	case "accent_color":
 		return i18n.T(ctx, "settings.label.accent_color")
+	case "allow_self_registration":
+		return i18n.T(ctx, "settings.label.allow_self_registration")
 	default:
 		return key
 	}

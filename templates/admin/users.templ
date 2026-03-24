@@ -57,8 +57,10 @@ templ Users(users []models.User, siteName string, accentColor string, displayNam
 							<td class="px-4 py-3 text-sm">
 								if user.Role == "admin" {
 									<span class="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">{ i18n.T(ctx, "users.role.admin") }</span>
-								} else {
+								} else if user.Role == "manager" {
 									<span class="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">{ i18n.T(ctx, "users.role.manager") }</span>
+								} else {
+									<span class="inline-block px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs">{ i18n.T(ctx, "users.role.user") }</span>
 								}
 							</td>
 							<td class="px-4 py-3 text-sm text-gray-500">{ i18n.FormatDate(ctx, user.CreatedAt) }</td>

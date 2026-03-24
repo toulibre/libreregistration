@@ -62,7 +62,24 @@ templ PublicShellOG(title string, siteName string, accentColor string, og *OGMet
 		<header class="bg-white shadow-sm">
 			<div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
 				<a href="/" class="text-xl font-bold text-accent hover:text-accent-dark">{ siteName }</a>
-				@langSwitcher()
+				<div class="flex items-center gap-3 text-sm">
+					if IsLoggedIn(ctx) {
+						if IsUserRole(ctx) {
+							<a href="/account" class="text-accent hover:text-accent-dark">{ CtxDisplayName(ctx) }</a>
+						} else {
+							<a href="/admin/" class="text-accent hover:text-accent-dark">{ CtxDisplayName(ctx) }</a>
+						}
+						<form method="POST" action="/logout" class="inline">
+							<button type="submit" class="text-gray-500 hover:text-gray-700">{ i18n.T(ctx, "nav.logout") }</button>
+						</form>
+					} else {
+						if AllowSelfRegistration(ctx) {
+							<a href="/register" class="text-accent hover:text-accent-dark font-medium">{ i18n.T(ctx, "register.button.short") }</a>
+						}
+						<a href="/admin/login" class="text-gray-500 hover:text-gray-700">{ i18n.T(ctx, "login.button") }</a>
+					}
+					@langSwitcher()
+				</div>
 			</div>
 		</header>
 		<main class="max-w-4xl mx-auto px-4 py-8">
@@ -99,7 +116,7 @@ templ AdminShell(title string, siteName string, accentColor string, username str
 				<div class="mt-auto pt-8 border-t border-gray-700 text-sm text-gray-400">
 					<p class="mb-2">{ username }</p>
 					<a href="/admin/password" class="text-gray-400 hover:text-white underline">{ i18n.T(ctx, "nav.password") }</a>
-					<form method="POST" action="/admin/logout" class="mt-1">
+					<form method="POST" action="/logout" class="mt-1">
 						<button type="submit" class="text-gray-400 hover:text-white underline">{ i18n.T(ctx, "nav.logout") }</button>
 					</form>
 					<div class="mt-2">

@@ -161,3 +161,51 @@ func (s *AuthService) ChangePassword(userID, currentPassword, newPassword string
 }
 
 var ErrInvalidCurrentPassword = fmt.Errorf("invalid current password")
+var ErrUsernameTaken = fmt.Errorf("username already taken")
+
+func (s *AuthService) Register(username, name, email, password string) (*models.User, error) {
+	existing, err := s.users.GetByUsername(username)
+	if err != nil {
+		return nil, fmt.Errorf("register: %w", err)
+	}
+	if existing != nil {
+		return nil, ErrUsernameTaken
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("hash password: %w", err)
+	}
+
+	now := time.Now()
+	user := &models.User{
+		ID:           uuid.New().String(),
+		Username:     username,
+		Name:         name,
+		Email:        email,
+		PasswordHash: string(hash),
+		Role:         models.RoleUser,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+
+	if err := s.users.Create(user); err != nil {
+		return nil, fmt.Errorf("register: %w", err)
+	}
+	return user, nil
+}
+
+func (s *AuthService) UpdateProfile(id, name, email, avatarPath string) error {
+	user, err := s.users.GetByID(id)
+	if err != nil {
+		return fmt.Errorf("update profile: %w", err)
+	}
+	if user == nil {
+		return fmt.Errorf("update profile: not found")
+	}
+
+	user.Name = name
+	user.Email = email
+	user.AvatarPath = avatarPath
+	return s.users.Update(user)
+}

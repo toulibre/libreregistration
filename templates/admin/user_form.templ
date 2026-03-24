@@ -72,6 +72,7 @@ templ userFormFields(user *models.User, isEdit bool) {
 	<div>
 		<label for="role" class="block text-sm font-medium text-gray-700 mb-1">{ i18n.T(ctx, "user_form.label.role") }</label>
 		<select id="role" name="role" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent">
+			<option value="user" selected?={ user.Role == "user" }>{ i18n.T(ctx, "user_form.role.user") }</option>
 			<option value="manager" selected?={ user.Role == "manager" || user.Role == "" }>{ i18n.T(ctx, "user_form.role.manager") }</option>
 			<option value="admin" selected?={ user.Role == "admin" }>{ i18n.T(ctx, "user_form.role.admin") }</option>
 		</select>

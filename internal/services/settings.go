@@ -41,3 +41,8 @@ func (s *SettingsService) Update(settings map[string]string) error {
 func (s *SettingsService) Get(key string) (string, error) {
 	return s.settings.Get(key)
 }
+
+func (s *SettingsService) AllowSelfRegistration() bool {
+	v, _ := s.settings.Get("allow_self_registration")
+	return v == "true"
+}

@@ -7,6 +7,7 @@ type Role string
 const (
 	RoleAdmin   Role = "admin"
 	RoleManager Role = "manager"
+	RoleUser    Role = "user"
 )
 
 type User struct {
@@ -54,11 +55,14 @@ type Event struct {
 type Registration struct {
 	ID           string
 	EventID      string
+	UserID       *string
 	Name         string
 	Email        string
 	Comment      string
 	CancelToken  string
 	RegisteredAt time.Time
+	EventTitle   string // computed, not stored (for user dashboard)
+	EventSlug    string // computed, not stored (for user dashboard)
 }
 
 type Setting struct {

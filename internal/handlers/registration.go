@@ -56,7 +56,13 @@ func (h *RegistrationHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.registrations.Register(r.Context(), event.ID, name, email, comment)
+	// Link to user account if logged in
+	var userID *string
+	if uid := middleware.GetUserID(r); uid != "" {
+		userID = &uid
+	}
+
+	_, err = h.registrations.Register(r.Context(), event.ID, name, email, comment, userID)
 	if err != nil {
 		h.renderError(w, r, event, mapRegistrationError(r.Context(), err))
 		return

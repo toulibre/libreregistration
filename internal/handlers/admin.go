@@ -148,8 +148,8 @@ func (h *AdminHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if role != models.RoleAdmin && role != models.RoleManager {
-		role = models.RoleManager
+	if role != models.RoleAdmin && role != models.RoleManager && role != models.RoleUser {
+		role = models.RoleUser
 	}
 
 	avatarFile, err := saveUpload(r, "avatar", h.uploadDir)
@@ -214,8 +214,8 @@ func (h *AdminHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if role != models.RoleAdmin && role != models.RoleManager {
-		role = models.RoleManager
+	if role != models.RoleAdmin && role != models.RoleManager && role != models.RoleUser {
+		role = models.RoleUser
 	}
 
 	// Handle avatar upload

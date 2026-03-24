@@ -23,7 +23,7 @@ func NewRegistrationService(registrations *database.RegistrationStore, events *d
 	return &RegistrationService{registrations: registrations, events: events, cfg: cfg}
 }
 
-func (s *RegistrationService) Register(ctx context.Context, eventID, name, email, comment string) (*models.Registration, error) {
+func (s *RegistrationService) Register(ctx context.Context, eventID, name, email, comment string, userID *string) (*models.Registration, error) {
 	// Check event exists and is open
 	event, err := s.events.GetByID(eventID)
 	if err != nil {
@@ -55,6 +55,7 @@ func (s *RegistrationService) Register(ctx context.Context, eventID, name, email
 	reg := &models.Registration{
 		ID:           uuid.New().String(),
 		EventID:      eventID,
+		UserID:       userID,
 		Name:         name,
 		Email:        email,
 		Comment:      comment,
@@ -101,4 +102,12 @@ func (s *RegistrationService) DeleteRegistration(id string) error {
 
 func (s *RegistrationService) TotalCount() (int, error) {
 	return s.registrations.TotalCount()
+}
+
+func (s *RegistrationService) ListByUser(userID string) ([]models.Registration, error) {
+	return s.registrations.ListByUser(userID)
+}
+
+func (s *RegistrationService) AnonymizeByUser(userID string) error {
+	return s.registrations.AnonymizeByUser(userID)
 }

@@ -42,6 +42,18 @@ func RequireAuth(next http.Handler) http.Handler {
 	})
 }
 
+// RequireStaff returns 403 if user is not admin or manager.
+func RequireStaff(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		role, _ := r.Context().Value(UserRoleKey).(string)
+		if role != "admin" && role != "manager" {
+			http.Error(w, i18n.T(r.Context(), "error.forbidden"), http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 // RequireAdmin returns 403 if user is not an admin.
 func RequireAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

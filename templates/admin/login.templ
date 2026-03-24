@@ -5,7 +5,7 @@ import (
 	"github.com/toulibre/libreregistration/templates/layouts"
 )
 
-templ Login(siteName string, accentColor string, csrfField string, errorMsg string) {
+templ Login(siteName string, accentColor string, csrfField string, errorMsg string, allowRegistration bool) {
 	@layouts.Base(i18n.T(ctx, "login.title"), siteName, accentColor, nil) {
 		<div class="min-h-screen flex items-center justify-center">
 			<div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
@@ -28,6 +28,12 @@ templ Login(siteName string, accentColor string, csrfField string, errorMsg stri
 					</div>
 					<button type="submit" class="w-full bg-accent text-white py-2 px-4 rounded-md hover:bg-accent-dark transition-colors">{ i18n.T(ctx, "login.button") }</button>
 				</form>
+				if allowRegistration {
+					<p class="mt-4 text-center text-sm text-gray-500">
+						{ i18n.T(ctx, "login.no_account") }
+						<a href="/register" class="text-accent hover:text-accent-dark">{ i18n.T(ctx, "login.register_link") }</a>
+					</p>
+				}
 			</div>
 		</div>
 	}
