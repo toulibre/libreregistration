@@ -80,7 +80,7 @@ func run() error {
 	healthHandler := handlers.NewHealthHandler(db)
 	authHandler := handlers.NewAuthHandler(authService, settingsService)
 	eventHandler := handlers.NewEventHandler(eventService, registrationService, settingsService, cfg.UploadDir, cfg.BaseURL)
-	registrationHandler := handlers.NewRegistrationHandler(registrationService, eventService, settingsService)
+	registrationHandler := handlers.NewRegistrationHandler(registrationService, eventService, authService, settingsService)
 	adminHandler := handlers.NewAdminHandler(eventService, registrationService, authService, settingsService, cfg.UploadDir)
 	accountHandler := handlers.NewAccountHandler(authService, registrationService, settingsService, cfg.UploadDir)
 
@@ -94,6 +94,7 @@ func run() error {
 	r.Use(middleware.Session(sessionStore))
 	r.Use(middleware.Locale)
 	r.Use(middleware.CSRF([]byte(cfg.CSRFKey), false))
+	r.Use(middleware.LoadUser)
 	r.Use(middleware.InjectSelfRegistration(settingsService.AllowSelfRegistration))
 
 	// Health check

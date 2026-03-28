@@ -12,6 +12,30 @@ const UsernameKey contextKey = "username"
 const DisplayNameKey contextKey = "display_name"
 const UserRoleKey contextKey = "user_role"
 
+// LoadUser populates context with user info from session if present, without requiring auth.
+func LoadUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session := GetSession(r)
+		if session != nil {
+			if userID, ok := session.Values["user_id"].(string); ok && userID != "" {
+				ctx := r.Context()
+				ctx = context.WithValue(ctx, UserIDKey, userID)
+				if username, ok := session.Values["username"].(string); ok {
+					ctx = context.WithValue(ctx, UsernameKey, username)
+				}
+				if displayName, ok := session.Values["display_name"].(string); ok {
+					ctx = context.WithValue(ctx, DisplayNameKey, displayName)
+				}
+				if role, ok := session.Values["role"].(string); ok {
+					ctx = context.WithValue(ctx, UserRoleKey, role)
+				}
+				r = r.WithContext(ctx)
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 // RequireAuth redirects to login if not authenticated.
 func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -16,6 +16,7 @@
   "event.label.email": "E-mail (facultatif, pour recevoir un lien d'annulation)",
   "event.label.comment": "Commentaire (facultatif)",
   "event.label.captcha": "Anti-spam : combien font",
+  "event.registering_as": "Inscription en tant que",
   "event.register_button": "S'inscrire",
   "event.registration_full": "Les inscriptions sont compl\u00e8tes.",
   "event.registration_closed": "Les inscriptions ne sont pas ouvertes.",

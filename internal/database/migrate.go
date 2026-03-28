@@ -19,6 +19,10 @@ func Migrate(db *DB) error {
 		return fmt.Errorf("create migrations table: %w", err)
 	}
 
+	// Disable FK checks during migrations (some migrations recreate tables)
+	db.Exec("PRAGMA foreign_keys = OFF")
+	defer db.Exec("PRAGMA foreign_keys = ON")
+
 	entries, err := migrationsFS.ReadDir("migrations")
 	if err != nil {
 		return fmt.Errorf("read migrations dir: %w", err)

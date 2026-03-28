@@ -86,8 +86,11 @@ func (h *EventHandler) Show(w http.ResponseWriter, r *http.Request) {
 
 	jsonLD := buildEventJSONLD(event, h.baseURL, siteName)
 
-	challenge := captcha.Generate(w, r)
-	public.Event(event, regs, csrfField, siteName, accentColor, flash, "", challenge.Question, og, jsonLD).Render(r.Context(), w)
+	var captchaQuestion string
+	if middleware.GetUserID(r) == "" {
+		captchaQuestion = captcha.Generate(w, r).Question
+	}
+	public.Event(event, regs, csrfField, siteName, accentColor, flash, "", captchaQuestion, og, jsonLD).Render(r.Context(), w)
 }
 
 func (h *EventHandler) ICal(w http.ResponseWriter, r *http.Request) {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/toulibre/libreregistration/internal/captcha"
 	"github.com/toulibre/libreregistration/internal/i18n"
 	"github.com/toulibre/libreregistration/internal/middleware"
 	"github.com/toulibre/libreregistration/internal/models"
@@ -68,7 +69,15 @@ func (h *AuthHandler) RegisterForm(w http.ResponseWriter, r *http.Request) {
 
 	siteName, accentColor := h.settings.GetSiteSettings()
 	csrfField := middleware.CSRFTemplateField(r)
-	public.RegisterForm(siteName, accentColor, csrfField, "", &models.User{}).Render(r.Context(), w)
+	challenge := captcha.Generate(w, r)
+	public.RegisterForm(siteName, accentColor, csrfField, "", &models.User{}, challenge.Question).Render(r.Context(), w)
+}
+
+func (h *AuthHandler) renderRegisterError(w http.ResponseWriter, r *http.Request, u *models.User, errorKey string) {
+	siteName, accentColor := h.settings.GetSiteSettings()
+	csrfField := middleware.CSRFTemplateField(r)
+	challenge := captcha.Generate(w, r)
+	public.RegisterForm(siteName, accentColor, csrfField, i18n.T(r.Context(), errorKey), u, challenge.Question).Render(r.Context(), w)
 }
 
 func (h *AuthHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -81,12 +90,22 @@ func (h *AuthHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	email := r.FormValue("email")
 	password := r.FormValue("password")
+	u := &models.User{Username: username, Name: name, Email: email}
+
+	// Honeypot check
+	if captcha.IsHoneypotFilled(r) {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+
+	// Captcha check
+	if !captcha.Verify(w, r) {
+		h.renderRegisterError(w, r, u, "error.captcha_invalid")
+		return
+	}
 
 	if username == "" || password == "" {
-		siteName, accentColor := h.settings.GetSiteSettings()
-		csrfField := middleware.CSRFTemplateField(r)
-		u := &models.User{Username: username, Name: name, Email: email}
-		public.RegisterForm(siteName, accentColor, csrfField, i18n.T(r.Context(), "error.login_password_required"), u).Render(r.Context(), w)
+		h.renderRegisterError(w, r, u, "error.login_password_required")
 		return
 	}
 
@@ -96,10 +115,7 @@ func (h *AuthHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, services.ErrUsernameTaken) {
 			errorKey = "error.username_taken"
 		}
-		siteName, accentColor := h.settings.GetSiteSettings()
-		csrfField := middleware.CSRFTemplateField(r)
-		u := &models.User{Username: username, Name: name, Email: email}
-		public.RegisterForm(siteName, accentColor, csrfField, i18n.T(r.Context(), errorKey), u).Render(r.Context(), w)
+		h.renderRegisterError(w, r, u, errorKey)
 		return
 	}
 

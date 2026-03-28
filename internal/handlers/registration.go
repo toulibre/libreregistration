@@ -19,11 +19,12 @@ import (
 type RegistrationHandler struct {
 	registrations *services.RegistrationService
 	events        *services.EventService
+	auth          *services.AuthService
 	settings      *services.SettingsService
 }
 
-func NewRegistrationHandler(registrations *services.RegistrationService, events *services.EventService, settings *services.SettingsService) *RegistrationHandler {
-	return &RegistrationHandler{registrations: registrations, events: events, settings: settings}
+func NewRegistrationHandler(registrations *services.RegistrationService, events *services.EventService, auth *services.AuthService, settings *services.SettingsService) *RegistrationHandler {
+	return &RegistrationHandler{registrations: registrations, events: events, auth: auth, settings: settings}
 }
 
 func (h *RegistrationHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -34,32 +35,42 @@ func (h *RegistrationHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name := strings.TrimSpace(r.FormValue("name"))
-	email := strings.TrimSpace(r.FormValue("email"))
 	comment := strings.TrimSpace(r.FormValue("comment"))
 
-	if name == "" {
-		h.renderError(w, r, event, i18n.T(r.Context(), "error.name_required"))
-		return
-	}
-
-	// Spam protection: honeypot
-	if captcha.IsHoneypotFilled(r) {
-		// Silently reject but pretend success to not reveal detection
-		http.Redirect(w, r, "/event/"+slug, http.StatusFound)
-		return
-	}
-
-	// Spam protection: math captcha
-	if !captcha.Verify(w, r) {
-		h.renderError(w, r, event, i18n.T(r.Context(), "error.captcha_invalid"))
-		return
-	}
-
-	// Link to user account if logged in
+	var name, email string
 	var userID *string
-	if uid := middleware.GetUserID(r); uid != "" {
+	loggedIn := middleware.GetUserID(r) != ""
+
+	if loggedIn {
+		// Logged-in user: use profile data, skip anti-spam
+		uid := middleware.GetUserID(r)
 		userID = &uid
+		user, err := h.auth.GetUser(uid)
+		if err != nil || user == nil {
+			http.Error(w, i18n.T(r.Context(), "error.internal"), http.StatusInternalServerError)
+			return
+		}
+		name = user.DisplayName()
+		email = user.Email
+	} else {
+		// Anonymous: validate name + anti-spam
+		name = strings.TrimSpace(r.FormValue("name"))
+		email = strings.TrimSpace(r.FormValue("email"))
+
+		if name == "" {
+			h.renderError(w, r, event, i18n.T(r.Context(), "error.name_required"))
+			return
+		}
+
+		if captcha.IsHoneypotFilled(r) {
+			http.Redirect(w, r, "/event/"+slug, http.StatusFound)
+			return
+		}
+
+		if !captcha.Verify(w, r) {
+			h.renderError(w, r, event, i18n.T(r.Context(), "error.captcha_invalid"))
+			return
+		}
 	}
 
 	_, err = h.registrations.Register(r.Context(), event.ID, name, email, comment, userID)
@@ -76,9 +87,12 @@ func (h *RegistrationHandler) renderError(w http.ResponseWriter, r *http.Request
 	siteName, accentColor := h.settings.GetSiteSettings()
 	csrfField := middleware.CSRFTemplateField(r)
 	regs, _ := h.registrations.ListByEvent(event.ID)
-	challenge := captcha.Generate(w, r)
+	var captchaQuestion string
+	if middleware.GetUserID(r) == "" {
+		captchaQuestion = captcha.Generate(w, r).Question
+	}
 	w.WriteHeader(http.StatusBadRequest)
-	public.Event(event, regs, csrfField, siteName, accentColor, "", errMsg, challenge.Question, nil, "").Render(r.Context(), w)
+	public.Event(event, regs, csrfField, siteName, accentColor, "", errMsg, captchaQuestion, nil, "").Render(r.Context(), w)
 }
 
 func (h *RegistrationHandler) Cancel(w http.ResponseWriter, r *http.Request) {
@@ -105,8 +119,11 @@ func (h *RegistrationHandler) Cancel(w http.ResponseWriter, r *http.Request) {
 	regs, _ := h.registrations.ListByEvent(event.ID)
 	siteName, accentColor := h.settings.GetSiteSettings()
 	csrfField := middleware.CSRFTemplateField(r)
-	challenge := captcha.Generate(w, r)
-	public.Event(event, regs, csrfField, siteName, accentColor, "", i18n.T(r.Context(), "flash.registration_canceled"), challenge.Question, nil, "").Render(r.Context(), w)
+	var captchaQuestion string
+	if middleware.GetUserID(r) == "" {
+		captchaQuestion = captcha.Generate(w, r).Question
+	}
+	public.Event(event, regs, csrfField, siteName, accentColor, "", i18n.T(r.Context(), "flash.registration_canceled"), captchaQuestion, nil, "").Render(r.Context(), w)
 }
 
 func mapRegistrationError(ctx context.Context, err error) string {

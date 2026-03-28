@@ -220,7 +220,7 @@ func seedData(auth *services.AuthService, events *services.EventService, regs *s
 	}
 
 	for _, a := range attendees {
-		if _, err := regs.Register(ctx, a.eventID, a.name, a.email, a.comment); err != nil {
+		if _, err := regs.Register(ctx, a.eventID, a.name, a.email, a.comment, nil); err != nil {
 			return fmt.Errorf("register %q: %w", a.name, err)
 		}
 	}
@@ -238,9 +238,9 @@ func startServer(cfg *config.Config, auth *services.AuthService, events *service
 	}
 
 	authHandler := handlers.NewAuthHandler(auth, settings)
-	eventHandler := handlers.NewEventHandler(events, regs, settings, uploadDir)
-	registrationHandler := handlers.NewRegistrationHandler(regs, events, settings)
-	adminHandler := handlers.NewAdminHandler(events, regs, auth, settings)
+	eventHandler := handlers.NewEventHandler(events, regs, settings, uploadDir, cfg.BaseURL)
+	registrationHandler := handlers.NewRegistrationHandler(regs, events, auth, settings)
+	adminHandler := handlers.NewAdminHandler(events, regs, auth, settings, uploadDir)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logging)
