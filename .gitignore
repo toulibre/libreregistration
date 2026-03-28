@@ -2,6 +2,9 @@
 bin/
 *.exe
 
+# Uploads
+uploads/
+
 # Database
 *.db
 *.db-journal
