@@ -171,6 +171,8 @@
   "error.registration_not_open": "registrations are not open",
   "error.registration_deadline_passed": "registration deadline has passed",
   "error.registration_full": "registrations are full",
+  "error.already_registered": "You are already registered for this event.",
+  "event.already_registered": "You are already registered for this event.",
 
   "field.title": "title",
   "field.event_date": "event date",

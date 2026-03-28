@@ -92,7 +92,7 @@ func (h *RegistrationHandler) renderError(w http.ResponseWriter, r *http.Request
 		captchaQuestion = captcha.Generate(w, r).Question
 	}
 	w.WriteHeader(http.StatusBadRequest)
-	public.Event(event, regs, csrfField, siteName, accentColor, "", errMsg, captchaQuestion, nil, "").Render(r.Context(), w)
+	public.Event(event, regs, csrfField, siteName, accentColor, "", errMsg, captchaQuestion, nil, "", false).Render(r.Context(), w)
 }
 
 func (h *RegistrationHandler) Cancel(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +123,7 @@ func (h *RegistrationHandler) Cancel(w http.ResponseWriter, r *http.Request) {
 	if middleware.GetUserID(r) == "" {
 		captchaQuestion = captcha.Generate(w, r).Question
 	}
-	public.Event(event, regs, csrfField, siteName, accentColor, "", i18n.T(r.Context(), "flash.registration_canceled"), captchaQuestion, nil, "").Render(r.Context(), w)
+	public.Event(event, regs, csrfField, siteName, accentColor, "", i18n.T(r.Context(), "flash.registration_canceled"), captchaQuestion, nil, "", false).Render(r.Context(), w)
 }
 
 func mapRegistrationError(ctx context.Context, err error) string {
@@ -136,6 +136,8 @@ func mapRegistrationError(ctx context.Context, err error) string {
 		return i18n.T(ctx, "error.registration_deadline_passed")
 	case errors.Is(err, services.ErrRegistrationFull):
 		return i18n.T(ctx, "error.registration_full")
+	case errors.Is(err, services.ErrAlreadyRegistered):
+		return i18n.T(ctx, "error.already_registered")
 	default:
 		return i18n.T(ctx, "error.internal")
 	}

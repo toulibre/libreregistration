@@ -52,6 +52,17 @@ func (s *RegistrationService) Register(ctx context.Context, eventID, name, email
 		}
 	}
 
+	// Check duplicate registration for logged-in users
+	if userID != nil {
+		exists, err := s.registrations.ExistsByUserAndEvent(*userID, eventID)
+		if err != nil {
+			return nil, fmt.Errorf("check duplicate: %w", err)
+		}
+		if exists {
+			return nil, ErrAlreadyRegistered
+		}
+	}
+
 	reg := &models.Registration{
 		ID:           uuid.New().String(),
 		EventID:      eventID,
@@ -106,6 +117,11 @@ func (s *RegistrationService) TotalCount() (int, error) {
 
 func (s *RegistrationService) ListByUser(userID string) ([]models.Registration, error) {
 	return s.registrations.ListByUser(userID)
+}
+
+func (s *RegistrationService) IsUserRegistered(userID, eventID string) bool {
+	exists, err := s.registrations.ExistsByUserAndEvent(userID, eventID)
+	return err == nil && exists
 }
 
 func (s *RegistrationService) AnonymizeByUser(userID string) error {

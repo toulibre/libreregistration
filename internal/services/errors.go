@@ -7,4 +7,5 @@ var (
 	ErrRegistrationNotOpen       = errors.New("registration not open")
 	ErrRegistrationDeadlinePassed = errors.New("registration deadline passed")
 	ErrRegistrationFull          = errors.New("registration full")
+	ErrAlreadyRegistered         = errors.New("already registered")
 )

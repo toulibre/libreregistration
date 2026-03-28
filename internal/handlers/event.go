@@ -87,10 +87,14 @@ func (h *EventHandler) Show(w http.ResponseWriter, r *http.Request) {
 	jsonLD := buildEventJSONLD(event, h.baseURL, siteName)
 
 	var captchaQuestion string
-	if middleware.GetUserID(r) == "" {
+	var alreadyRegistered bool
+	uid := middleware.GetUserID(r)
+	if uid == "" {
 		captchaQuestion = captcha.Generate(w, r).Question
+	} else {
+		alreadyRegistered = h.registrations.IsUserRegistered(uid, event.ID)
 	}
-	public.Event(event, regs, csrfField, siteName, accentColor, flash, "", captchaQuestion, og, jsonLD).Render(r.Context(), w)
+	public.Event(event, regs, csrfField, siteName, accentColor, flash, "", captchaQuestion, og, jsonLD, alreadyRegistered).Render(r.Context(), w)
 }
 
 func (h *EventHandler) ICal(w http.ResponseWriter, r *http.Request) {

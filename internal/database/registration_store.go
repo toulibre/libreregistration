@@ -107,6 +107,12 @@ func (s *RegistrationStore) AnonymizeByUser(userID string) error {
 	return nil
 }
 
+func (s *RegistrationStore) ExistsByUserAndEvent(userID, eventID string) (bool, error) {
+	var count int
+	err := s.db.QueryRow("SELECT COUNT(*) FROM registrations WHERE user_id = ? AND event_id = ?", userID, eventID).Scan(&count)
+	return count > 0, err
+}
+
 func (s *RegistrationStore) Delete(id string) error {
 	_, err := s.db.Exec("DELETE FROM registrations WHERE id = ?", id)
 	if err != nil {

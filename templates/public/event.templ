@@ -8,7 +8,7 @@ import (
 	"github.com/toulibre/libreregistration/templates/layouts"
 )
 
-templ Event(event *models.Event, registrations []models.Registration, csrfField string, siteName string, accentColor string, flash string, cancelMsg string, captchaQuestion string, og *layouts.OGMeta, jsonLD string) {
+templ Event(event *models.Event, registrations []models.Registration, csrfField string, siteName string, accentColor string, flash string, cancelMsg string, captchaQuestion string, og *layouts.OGMeta, jsonLD string, alreadyRegistered bool) {
 	@layouts.PublicShellOG(event.Title, siteName, accentColor, og) {
 		if jsonLD != "" {
 			@templ.Raw(`<script type="application/ld+json">` + jsonLD + `</script>`)
@@ -87,7 +87,9 @@ templ Event(event *models.Event, registrations []models.Registration, csrfField 
 				<div class="bg-green-50 text-green-700 p-4 rounded mb-6">{ flash }</div>
 			}
 			if event.RegistrationOpen {
-				if event.MaxCapacity == nil || event.RegistrationCount < *event.MaxCapacity {
+				if alreadyRegistered {
+					<div class="bg-blue-50 text-blue-700 p-4 rounded mb-6">{ i18n.T(ctx, "event.already_registered") }</div>
+				} else if event.MaxCapacity == nil || event.RegistrationCount < *event.MaxCapacity {
 					<div class="bg-white rounded-lg shadow-sm p-6 mb-8">
 						<h2 class="text-xl font-semibold mb-4">{ i18n.T(ctx, "event.register_heading") }</h2>
 						<form method="POST" action={ templ.SafeURL("/event/" + event.Slug + "/register") } class="space-y-4">
