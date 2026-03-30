@@ -238,7 +238,7 @@ func startServer(cfg *config.Config, auth *services.AuthService, events *service
 	}
 
 	authHandler := handlers.NewAuthHandler(auth, settings)
-	eventHandler := handlers.NewEventHandler(events, regs, settings, uploadDir, cfg.BaseURL)
+	eventHandler := handlers.NewEventHandler(events, regs, auth, settings, uploadDir, cfg.BaseURL)
 	registrationHandler := handlers.NewRegistrationHandler(regs, events, auth, settings)
 	adminHandler := handlers.NewAdminHandler(events, regs, auth, settings, uploadDir)
 

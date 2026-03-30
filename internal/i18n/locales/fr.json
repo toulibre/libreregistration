@@ -71,6 +71,9 @@
   "event_form.label.capacity": "Capacit\u00e9 maximale (facultatif)",
   "event_form.label.public_list": "Liste des participants publique",
   "event_form.label.open": "Inscriptions ouvertes",
+  "event_form.label.organizers": "Organisateurs",
+  "event_form.organizers_help": "Les organisateurs seront notifi\u00e9s par e-mail lors de chaque inscription.",
+  "event_form.organizers_search": "Rechercher un utilisateur\u2026",
   "event_form.label.image": "Image",
   "event_form.label.banner": "Banni\u00e8re",
   "event_form.image_current": "Image actuelle",
@@ -189,6 +192,8 @@
 
   "mail.confirmation_subject_fmt": "Inscription confirm\u00e9e : %s",
   "mail.confirmation_body_fmt": "Bonjour,\n\nVotre inscription \u00e0 \u00ab %s \u00bb est confirm\u00e9e.\n\nPour annuler votre inscription, rendez-vous sur :\n%s\n\nCordialement,\n%s",
+  "mail.organizer_notification_subject_fmt": "Nouvelle inscription : %s",
+  "mail.organizer_notification_body_fmt": "Bonjour,\n\nUne nouvelle inscription a \u00e9t\u00e9 enregistr\u00e9e pour \u00ab %s \u00bb.\n\nParticipant : %s\nE-mail : %s\n\nCordialement,\n%s",
 
   "password.title": "Changer le mot de passe",
   "password.heading": "Changer le mot de passe",

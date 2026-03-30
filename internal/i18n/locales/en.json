@@ -71,6 +71,9 @@
   "event_form.label.capacity": "Maximum capacity (optional)",
   "event_form.label.public_list": "Public attendee list",
   "event_form.label.open": "Registrations open",
+  "event_form.label.organizers": "Organizers",
+  "event_form.organizers_help": "Organizers will be notified by email when someone registers.",
+  "event_form.organizers_search": "Search for a user\u2026",
   "event_form.label.image": "Image",
   "event_form.label.banner": "Banner",
   "event_form.image_current": "Current image",
@@ -189,6 +192,8 @@
 
   "mail.confirmation_subject_fmt": "Registration confirmed: %s",
   "mail.confirmation_body_fmt": "Hello,\n\nYour registration for \"%s\" is confirmed.\n\nTo cancel your registration, visit:\n%s\n\nBest regards,\n%s",
+  "mail.organizer_notification_subject_fmt": "New registration: %s",
+  "mail.organizer_notification_body_fmt": "Hello,\n\nA new registration has been recorded for \"%s\".\n\nAttendee: %s\nEmail: %s\n\nBest regards,\n%s",
 
   "password.title": "Change password",
   "password.heading": "Change password",

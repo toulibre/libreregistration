@@ -106,6 +106,62 @@ func (s *EventStore) CountUpcoming() (int, error) {
 	return count, err
 }
 
+func (s *EventStore) SetOrganizers(eventID string, userIDs []string) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec("DELETE FROM event_organizers WHERE event_id = ?", eventID); err != nil {
+		return fmt.Errorf("clear organizers: %w", err)
+	}
+	for _, uid := range userIDs {
+		if _, err := tx.Exec("INSERT INTO event_organizers (event_id, user_id) VALUES (?, ?)", eventID, uid); err != nil {
+			return fmt.Errorf("insert organizer: %w", err)
+		}
+	}
+	return tx.Commit()
+}
+
+func (s *EventStore) GetOrganizerIDs(eventID string) ([]string, error) {
+	rows, err := s.db.Query("SELECT user_id FROM event_organizers WHERE event_id = ?", eventID)
+	if err != nil {
+		return nil, fmt.Errorf("get organizer IDs: %w", err)
+	}
+	defer rows.Close()
+
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
+}
+
+func (s *EventStore) GetOrganizerEmails(eventID string) ([]string, error) {
+	rows, err := s.db.Query(`SELECT u.email FROM users u
+		JOIN event_organizers eo ON eo.user_id = u.id
+		WHERE eo.event_id = ? AND u.email != ''`, eventID)
+	if err != nil {
+		return nil, fmt.Errorf("get organizer emails: %w", err)
+	}
+	defer rows.Close()
+
+	var emails []string
+	for rows.Next() {
+		var email string
+		if err := rows.Scan(&email); err != nil {
+			return nil, err
+		}
+		emails = append(emails, email)
+	}
+	return emails, rows.Err()
+}
+
 func (s *EventStore) listEvents(where string, args ...interface{}) ([]models.Event, error) {
 	query := fmt.Sprintf(`SELECT e.id, e.title, e.slug, e.description, e.location, e.event_date,
 		e.registration_deadline, e.max_capacity, e.attendee_list_public, e.registration_open,

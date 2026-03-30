@@ -84,6 +84,15 @@ func (s *RegistrationService) Register(ctx context.Context, eventID, name, email
 		go mail.SendConfirmation(s.cfg, ctx, email, event.Title, cancelURL)
 	}
 
+	// Notify organizers
+	if s.cfg.SMTPHost != "" {
+		if emails, err := s.events.GetOrganizerEmails(eventID); err == nil {
+			for _, orgEmail := range emails {
+				go mail.SendOrganizerNotification(s.cfg, ctx, orgEmail, reg.Name, reg.Email, event.Title)
+			}
+		}
+	}
+
 	return reg, nil
 }
 

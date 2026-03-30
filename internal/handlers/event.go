@@ -24,13 +24,14 @@ import (
 type EventHandler struct {
 	events        *services.EventService
 	registrations *services.RegistrationService
+	auth          *services.AuthService
 	settings      *services.SettingsService
 	uploadDir     string
 	baseURL       string
 }
 
-func NewEventHandler(events *services.EventService, registrations *services.RegistrationService, settings *services.SettingsService, uploadDir string, baseURL string) *EventHandler {
-	return &EventHandler{events: events, registrations: registrations, settings: settings, uploadDir: uploadDir, baseURL: baseURL}
+func NewEventHandler(events *services.EventService, registrations *services.RegistrationService, auth *services.AuthService, settings *services.SettingsService, uploadDir string, baseURL string) *EventHandler {
+	return &EventHandler{events: events, registrations: registrations, auth: auth, settings: settings, uploadDir: uploadDir, baseURL: baseURL}
 }
 
 // Public routes
@@ -171,26 +172,31 @@ func (h *EventHandler) NewForm(w http.ResponseWriter, r *http.Request) {
 		AttendeeListPublic: true,
 		RegistrationOpen:   true,
 	}
-	admin.EventForm(event, false, siteName, accentColor, middleware.GetDisplayName(r), csrfField, "").Render(r.Context(), w)
+	users, _ := h.auth.ListUsers()
+	admin.EventForm(event, false, siteName, accentColor, middleware.GetDisplayName(r), csrfField, "", users, nil).Render(r.Context(), w)
 }
 
 func (h *EventHandler) Create(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
 
-	event, err := h.parseEventForm(r)
-	if err != nil {
+	users, _ := h.auth.ListUsers()
+	renderErr := func(event *models.Event, errMsg string) {
 		siteName, accentColor := h.settings.GetSiteSettings()
 		csrfField := middleware.CSRFTemplateField(r)
-		admin.EventForm(event, false, siteName, accentColor, middleware.GetDisplayName(r), csrfField, err.Error()).Render(r.Context(), w)
+		selectedIDs := r.Form["organizers"]
+		admin.EventForm(event, false, siteName, accentColor, middleware.GetDisplayName(r), csrfField, errMsg, users, selectedIDs).Render(r.Context(), w)
+	}
+
+	event, err := h.parseEventForm(r)
+	if err != nil {
+		renderErr(event, err.Error())
 		return
 	}
 	event.CreatedBy = middleware.GetUserID(r)
 
 	imgFile, err := saveUpload(r, "image", h.uploadDir)
 	if err != nil {
-		siteName, accentColor := h.settings.GetSiteSettings()
-		csrfField := middleware.CSRFTemplateField(r)
-		admin.EventForm(event, false, siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.upload_invalid_type")).Render(r.Context(), w)
+		renderErr(event, i18n.T(r.Context(), "error.upload_invalid_type"))
 		return
 	}
 	event.ImagePath = imgFile
@@ -198,9 +204,7 @@ func (h *EventHandler) Create(w http.ResponseWriter, r *http.Request) {
 	bannerFile, err := saveUpload(r, "banner", h.uploadDir)
 	if err != nil {
 		deleteUpload(h.uploadDir, imgFile)
-		siteName, accentColor := h.settings.GetSiteSettings()
-		csrfField := middleware.CSRFTemplateField(r)
-		admin.EventForm(event, false, siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.upload_invalid_type")).Render(r.Context(), w)
+		renderErr(event, i18n.T(r.Context(), "error.upload_invalid_type"))
 		return
 	}
 	event.BannerPath = bannerFile
@@ -210,6 +214,11 @@ func (h *EventHandler) Create(w http.ResponseWriter, r *http.Request) {
 		deleteUpload(h.uploadDir, bannerFile)
 		http.Error(w, i18n.T(r.Context(), "error.internal"), http.StatusInternalServerError)
 		return
+	}
+
+	// Save organizers
+	if organizerIDs := r.Form["organizers"]; len(organizerIDs) > 0 {
+		h.events.SetOrganizers(event.ID, organizerIDs)
 	}
 
 	middleware.SetFlash(w, r, "success", i18n.T(r.Context(), "flash.event_created"))
@@ -229,7 +238,9 @@ func (h *EventHandler) EditForm(w http.ResponseWriter, r *http.Request) {
 	}
 	siteName, accentColor := h.settings.GetSiteSettings()
 	csrfField := middleware.CSRFTemplateField(r)
-	admin.EventForm(event, true, siteName, accentColor, middleware.GetDisplayName(r), csrfField, "").Render(r.Context(), w)
+	users, _ := h.auth.ListUsers()
+	organizerIDs, _ := h.events.GetOrganizerIDs(id)
+	admin.EventForm(event, true, siteName, accentColor, middleware.GetDisplayName(r), csrfField, "", users, organizerIDs).Render(r.Context(), w)
 }
 
 func (h *EventHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -242,14 +253,20 @@ func (h *EventHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	event, err := h.parseEventForm(r)
-	if err != nil {
+	users, _ := h.auth.ListUsers()
+	renderErr := func(event *models.Event, errMsg string) {
 		siteName, accentColor := h.settings.GetSiteSettings()
 		csrfField := middleware.CSRFTemplateField(r)
+		selectedIDs := r.Form["organizers"]
+		admin.EventForm(event, true, siteName, accentColor, middleware.GetDisplayName(r), csrfField, errMsg, users, selectedIDs).Render(r.Context(), w)
+	}
+
+	event, err := h.parseEventForm(r)
+	if err != nil {
 		event.ID = id
 		event.ImagePath = existing.ImagePath
 		event.BannerPath = existing.BannerPath
-		admin.EventForm(event, true, siteName, accentColor, middleware.GetDisplayName(r), csrfField, err.Error()).Render(r.Context(), w)
+		renderErr(event, err.Error())
 		return
 	}
 	event.ID = id
@@ -262,11 +279,9 @@ func (h *EventHandler) Update(w http.ResponseWriter, r *http.Request) {
 	// Handle image upload
 	imgFile, err := saveUpload(r, "image", h.uploadDir)
 	if err != nil {
-		siteName, accentColor := h.settings.GetSiteSettings()
-		csrfField := middleware.CSRFTemplateField(r)
 		event.ImagePath = existing.ImagePath
 		event.BannerPath = existing.BannerPath
-		admin.EventForm(event, true, siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.upload_invalid_type")).Render(r.Context(), w)
+		renderErr(event, i18n.T(r.Context(), "error.upload_invalid_type"))
 		return
 	}
 	switch {
@@ -283,10 +298,8 @@ func (h *EventHandler) Update(w http.ResponseWriter, r *http.Request) {
 	// Handle banner upload
 	bannerFile, err := saveUpload(r, "banner", h.uploadDir)
 	if err != nil {
-		siteName, accentColor := h.settings.GetSiteSettings()
-		csrfField := middleware.CSRFTemplateField(r)
 		event.BannerPath = existing.BannerPath
-		admin.EventForm(event, true, siteName, accentColor, middleware.GetDisplayName(r), csrfField, i18n.T(r.Context(), "error.upload_invalid_type")).Render(r.Context(), w)
+		renderErr(event, i18n.T(r.Context(), "error.upload_invalid_type"))
 		return
 	}
 	switch {
@@ -304,6 +317,9 @@ func (h *EventHandler) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, i18n.T(r.Context(), "error.internal"), http.StatusInternalServerError)
 		return
 	}
+
+	// Save organizers (empty slice clears all)
+	h.events.SetOrganizers(event.ID, r.Form["organizers"])
 
 	middleware.SetFlash(w, r, "success", i18n.T(r.Context(), "flash.event_updated"))
 	http.Redirect(w, r, "/admin/events", http.StatusFound)

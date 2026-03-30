@@ -123,7 +123,25 @@ func (s *EventService) Clone(id, userID, suffix string) (*models.Event, error) {
 		return nil, fmt.Errorf("create clone: %w", err)
 	}
 
+	// Copy organizers from original event
+	orgIDs, err := s.events.GetOrganizerIDs(id)
+	if err == nil && len(orgIDs) > 0 {
+		_ = s.events.SetOrganizers(clone.ID, orgIDs)
+	}
+
 	return clone, nil
+}
+
+func (s *EventService) SetOrganizers(eventID string, userIDs []string) error {
+	return s.events.SetOrganizers(eventID, userIDs)
+}
+
+func (s *EventService) GetOrganizerIDs(eventID string) ([]string, error) {
+	return s.events.GetOrganizerIDs(eventID)
+}
+
+func (s *EventService) GetOrganizerEmails(eventID string) ([]string, error) {
+	return s.events.GetOrganizerEmails(eventID)
 }
 
 func (s *EventService) Count() (int, error) {
