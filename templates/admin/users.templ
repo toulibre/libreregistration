@@ -23,9 +23,9 @@ templ Users(users []models.User, siteName string, accentColor string, displayNam
 			<a href="/admin/users/new" class="bg-accent text-white px-4 py-2 rounded-md hover:bg-accent-dark transition-colors">{ i18n.T(ctx, "users.new") }</a>
 		</div>
 		if flash != "" {
-			<div class="bg-green-50 text-green-700 p-3 rounded mb-4 text-sm">{ flash }</div>
+			<div data-flash class="bg-green-50 text-green-700 p-3 rounded mb-4 text-sm">{ flash }</div>
 		}
-		<div class="bg-white rounded-lg shadow-sm overflow-hidden">
+		<div class="bg-white rounded-lg shadow-sm overflow-x-auto">
 			<table class="w-full">
 				<thead class="bg-gray-50">
 					<tr>
@@ -43,7 +43,7 @@ templ Users(users []models.User, siteName string, accentColor string, displayNam
 							<td class="px-4 py-3 text-sm text-gray-500">
 								<div class="flex items-center gap-2">
 									if user.AvatarPath != "" {
-										<img src={ "/uploads/" + user.AvatarPath } class="w-8 h-8 rounded-full object-cover" alt=""/>
+										<img src={ "/uploads/" + user.AvatarPath } class="w-8 h-8 rounded-full object-cover" alt={ user.DisplayName() }/>
 									} else {
 										<div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-medium">
 											{ userInitial(user) }

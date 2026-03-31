@@ -20,12 +20,12 @@ templ Attendees(event *models.Event, registrations []models.Registration, siteNa
 			</div>
 		</div>
 		if flash != "" {
-			<div class="bg-green-50 text-green-700 p-3 rounded mb-4 text-sm">{ flash }</div>
+			<div data-flash class="bg-green-50 text-green-700 p-3 rounded mb-4 text-sm">{ flash }</div>
 		}
 		if len(registrations) == 0 {
 			<p class="text-gray-500">{ i18n.T(ctx, "attendees.empty") }</p>
 		} else {
-			<div class="bg-white rounded-lg shadow-sm overflow-hidden">
+			<div class="bg-white rounded-lg shadow-sm overflow-x-auto">
 				<table class="w-full">
 					<thead class="bg-gray-50">
 						<tr>

@@ -85,6 +85,7 @@ templ PublicShellOG(title string, siteName string, accentColor string, og *OGMet
 		<main class="max-w-4xl mx-auto px-4 py-8">
 			{ children... }
 		</main>
+		@FlashAutoDismiss()
 		<footer class="mt-16 border-t border-gray-200 py-6 text-center text-sm text-gray-500">
 			<p>{ i18n.T(ctx, "footer.powered_by") } <a href="https://github.com/toulibre/libreregistration" class="underline">LibreRegistration</a> · <a href="/admin/" class="hover:text-gray-700">{ i18n.T(ctx, "footer.admin") }</a></p>
 		</footer>
@@ -109,10 +110,10 @@ templ AdminShell(title string, siteName string, accentColor string, username str
 					@Logo("24")
 					{ siteName }
 				</a>
-				<a href="/admin/" class="block px-3 py-2 rounded hover:bg-gray-700">{ i18n.T(ctx, "nav.dashboard") }</a>
-				<a href="/admin/events" class="block px-3 py-2 rounded hover:bg-gray-700">{ i18n.T(ctx, "nav.events") }</a>
-				<a href="/admin/users" class="block px-3 py-2 rounded hover:bg-gray-700">{ i18n.T(ctx, "nav.users") }</a>
-				<a href="/admin/settings" class="block px-3 py-2 rounded hover:bg-gray-700">{ i18n.T(ctx, "nav.settings") }</a>
+				@adminNavLink("/admin/", i18n.T(ctx, "nav.dashboard"), NavIsActive(ctx, "/admin/"))
+				@adminNavLink("/admin/events", i18n.T(ctx, "nav.events"), NavIsActive(ctx, "/admin/events"))
+				@adminNavLink("/admin/users", i18n.T(ctx, "nav.users"), NavIsActive(ctx, "/admin/users"))
+				@adminNavLink("/admin/settings", i18n.T(ctx, "nav.settings"), NavIsActive(ctx, "/admin/settings"))
 				<div class="mt-auto pt-8 border-t border-gray-700 text-sm text-gray-400">
 					<p class="mb-2">{ username }</p>
 					<a href="/admin/password" class="text-gray-400 hover:text-white underline">{ i18n.T(ctx, "nav.password") }</a>
@@ -129,8 +130,31 @@ templ AdminShell(title string, siteName string, accentColor string, username str
 					{ children... }
 				</main>
 			</div>
+			@FlashAutoDismiss()
 		</div>
 	}
+}
+
+templ adminNavLink(href string, label string, active bool) {
+	if active {
+		<a href={ templ.SafeURL(href) } class="block px-3 py-2 rounded bg-gray-700 text-white font-medium" aria-current="page">{ label }</a>
+	} else {
+		<a href={ templ.SafeURL(href) } class="block px-3 py-2 rounded hover:bg-gray-700">{ label }</a>
+	}
+}
+
+templ FlashAutoDismiss() {
+	<script>
+	(function() {
+		document.querySelectorAll('[data-flash]').forEach(function(el) {
+			setTimeout(function() {
+				el.style.transition = 'opacity 0.5s';
+				el.style.opacity = '0';
+				setTimeout(function() { el.remove(); }, 500);
+			}, 5000);
+		});
+	})();
+	</script>
 }
 
 templ langSwitcher() {

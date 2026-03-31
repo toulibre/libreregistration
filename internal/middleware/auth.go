@@ -11,10 +11,13 @@ const UserIDKey contextKey = "user_id"
 const UsernameKey contextKey = "username"
 const DisplayNameKey contextKey = "display_name"
 const UserRoleKey contextKey = "user_role"
+const RequestPathKey contextKey = "request_path"
 
 // LoadUser populates context with user info from session if present, without requiring auth.
 func LoadUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), RequestPathKey, r.URL.Path)
+		r = r.WithContext(ctx)
 		session := GetSession(r)
 		if session != nil {
 			if userID, ok := session.Values["user_id"].(string); ok && userID != "" {

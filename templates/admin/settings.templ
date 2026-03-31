@@ -11,7 +11,7 @@ templ Settings(settings []models.Setting, siteName string, accentColor string, u
 	@layouts.AdminShell(i18n.T(ctx, "settings.title"), siteName, accentColor, username) {
 		<h1 class="text-2xl font-bold mb-6">{ i18n.T(ctx, "settings.heading") }</h1>
 		if flash != "" {
-			<div class="bg-green-50 text-green-700 p-3 rounded mb-4 text-sm">{ flash }</div>
+			<div data-flash class="bg-green-50 text-green-700 p-3 rounded mb-4 text-sm">{ flash }</div>
 		}
 		<form method="POST" action="/admin/settings" class="bg-white rounded-lg shadow-sm p-6 space-y-4 max-w-md">
 			@templ.Raw(csrfField)

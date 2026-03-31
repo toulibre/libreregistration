@@ -46,6 +46,7 @@
   "events.heading": "Events",
   "events.new": "New event",
   "events.empty": "No events.",
+  "events.empty_cta": "Create your first event \u2192",
   "events.col.title": "Title",
   "events.col.date": "Date",
   "events.col.registrations": "Registrations",

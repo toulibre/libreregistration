@@ -20,12 +20,15 @@ templ Events(events []models.Event, siteName string, accentColor string, usernam
 			<a href="/admin/events/new" class="bg-accent text-white px-4 py-2 rounded-md hover:bg-accent-dark transition-colors">{ i18n.T(ctx, "events.new") }</a>
 		</div>
 		if flash != "" {
-			<div class="bg-green-50 text-green-700 p-3 rounded mb-4 text-sm">{ flash }</div>
+			<div data-flash class="bg-green-50 text-green-700 p-3 rounded mb-4 text-sm">{ flash }</div>
 		}
 		if len(events) == 0 {
-			<p class="text-gray-500">{ i18n.T(ctx, "events.empty") }</p>
+			<div class="text-center py-12">
+				<p class="text-gray-500 mb-4">{ i18n.T(ctx, "events.empty") }</p>
+				<a href="/admin/events/new" class="text-accent hover:text-accent-dark font-medium">{ i18n.T(ctx, "events.empty_cta") }</a>
+			</div>
 		} else {
-			<div class="bg-white rounded-lg shadow-sm overflow-hidden">
+			<div class="bg-white rounded-lg shadow-sm overflow-x-auto">
 				<table class="w-full">
 					<thead class="bg-gray-50">
 						<tr>
