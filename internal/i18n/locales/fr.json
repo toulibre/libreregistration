@@ -202,6 +202,7 @@
   "password.label.new": "Nouveau mot de passe",
   "password.label.confirm": "Confirmer le nouveau mot de passe",
   "password.button.save": "Modifier le mot de passe",
+  "password.hint": "8 caract\u00e8res minimum",
   "password.error.fields_required": "Tous les champs sont requis.",
   "password.error.mismatch": "Les mots de passe ne correspondent pas.",
   "password.error.current_invalid": "Le mot de passe actuel est incorrect.",
@@ -239,6 +240,11 @@
   "flash.profile_updated": "Profil mis \u00e0 jour.",
 
   "clone.suffix": "(copie)",
+
+  "notfound.title": "Page introuvable",
+  "notfound.heading": "Page introuvable",
+  "notfound.message": "La page que vous recherchez n'existe pas ou a \u00e9t\u00e9 d\u00e9plac\u00e9e.",
+  "notfound.back_home": "\u2190 Retour \u00e0 l'accueil",
 
   "lang.switch": "English"
 }

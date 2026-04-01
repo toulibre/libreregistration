@@ -40,6 +40,7 @@ templ Base(title string, siteName string, accentColor string, og *OGMeta) {
 		</head>
 		<body class="min-h-screen bg-gray-50 text-gray-900">
 			{ children... }
+			@preventDoubleSubmit()
 		</body>
 	</html>
 }
@@ -163,4 +164,20 @@ templ langSwitcher() {
 	} else {
 		<a href="?lang=fr" class="text-sm text-gray-400 hover:text-white">{ i18n.T(ctx, "lang.switch") }</a>
 	}
+}
+
+templ preventDoubleSubmit() {
+	<script>
+	document.addEventListener('submit', function(e) {
+		var form = e.target;
+		if (form.dataset.submitted) { e.preventDefault(); return; }
+		form.dataset.submitted = 'true';
+		var btn = form.querySelector('button[type="submit"]');
+		if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+		setTimeout(function() {
+			delete form.dataset.submitted;
+			if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+		}, 5000);
+	});
+	</script>
 }

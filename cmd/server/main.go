@@ -14,6 +14,7 @@ import (
 	"github.com/toulibre/libreregistration/internal/handlers"
 	"github.com/toulibre/libreregistration/internal/middleware"
 	"github.com/toulibre/libreregistration/internal/services"
+	"github.com/toulibre/libreregistration/templates/public"
 )
 
 func main() {
@@ -96,6 +97,13 @@ func run() error {
 	r.Use(middleware.CSRF([]byte(cfg.CSRFKey), false))
 	r.Use(middleware.LoadUser)
 	r.Use(middleware.InjectSelfRegistration(settingsService.AllowSelfRegistration))
+
+	// Custom 404
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		siteName, accentColor := settingsService.GetSiteSettings()
+		w.WriteHeader(http.StatusNotFound)
+		public.NotFound(siteName, accentColor).Render(r.Context(), w)
+	})
 
 	// Health check
 	r.Get("/healthz", healthHandler.Healthz)

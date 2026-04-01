@@ -202,6 +202,7 @@
   "password.label.new": "New password",
   "password.label.confirm": "Confirm new password",
   "password.button.save": "Change password",
+  "password.hint": "Minimum 8 characters",
   "password.error.fields_required": "All fields are required.",
   "password.error.mismatch": "Passwords do not match.",
   "password.error.current_invalid": "Current password is incorrect.",
@@ -239,6 +240,11 @@
   "flash.profile_updated": "Profile updated.",
 
   "clone.suffix": "(copy)",
+
+  "notfound.title": "Page not found",
+  "notfound.heading": "Page not found",
+  "notfound.message": "The page you are looking for does not exist or has been moved.",
+  "notfound.back_home": "\u2190 Back to home",
 
   "lang.switch": "Fran\u00e7ais"
 }

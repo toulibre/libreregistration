@@ -1,0 +1,17 @@
+package public
+
+import (
+	"github.com/toulibre/libreregistration/internal/i18n"
+	"github.com/toulibre/libreregistration/templates/layouts"
+)
+
+templ NotFound(siteName string, accentColor string) {
+	@layouts.PublicShell(i18n.T(ctx, "notfound.title"), siteName, accentColor) {
+		<div class="text-center py-16">
+			<p class="text-6xl font-bold text-gray-300 mb-4">404</p>
+			<h1 class="text-2xl font-bold mb-2">{ i18n.T(ctx, "notfound.heading") }</h1>
+			<p class="text-gray-500 mb-6">{ i18n.T(ctx, "notfound.message") }</p>
+			<a href="/" class="text-accent hover:text-accent-dark font-medium">{ i18n.T(ctx, "notfound.back_home") }</a>
+		</div>
+	}
+}
