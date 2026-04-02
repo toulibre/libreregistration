@@ -2,10 +2,15 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+
 	"github.com/toulibre/libreregistration/internal/captcha"
+	"github.com/toulibre/libreregistration/internal/config"
 	"github.com/toulibre/libreregistration/internal/i18n"
+	"github.com/toulibre/libreregistration/internal/mail"
 	"github.com/toulibre/libreregistration/internal/middleware"
 	"github.com/toulibre/libreregistration/internal/models"
 	"github.com/toulibre/libreregistration/internal/services"
@@ -16,10 +21,11 @@ import (
 type AuthHandler struct {
 	auth     *services.AuthService
 	settings *services.SettingsService
+	cfg      *config.Config
 }
 
-func NewAuthHandler(auth *services.AuthService, settings *services.SettingsService) *AuthHandler {
-	return &AuthHandler{auth: auth, settings: settings}
+func NewAuthHandler(auth *services.AuthService, settings *services.SettingsService, cfg *config.Config) *AuthHandler {
+	return &AuthHandler{auth: auth, settings: settings, cfg: cfg}
 }
 
 func (h *AuthHandler) LoginForm(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +125,48 @@ func (h *AuthHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Send verification email if SMTP configured and user has email
+	if user.Email != "" && user.EmailVerifyToken != "" && h.cfg.SMTPHost != "" {
+		verifyURL := fmt.Sprintf("%s/verify-email/%s", h.cfg.BaseURL, user.EmailVerifyToken)
+		go mail.SendEmailVerification(h.cfg, r.Context(), user.Email, verifyURL)
+	}
+
 	h.setSession(w, r, user)
+	http.Redirect(w, r, "/account", http.StatusFound)
+}
+
+func (h *AuthHandler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
+	token := chi.URLParam(r, "token")
+	user, err := h.auth.VerifyEmail(token)
+	if err != nil || user == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	middleware.SetFlash(w, r, "success", i18n.T(r.Context(), "flash.email_verified"))
+	http.Redirect(w, r, "/account", http.StatusFound)
+}
+
+func (h *AuthHandler) ResendVerification(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r)
+	user, err := h.auth.GetUser(userID)
+	if err != nil || user == nil || user.EmailVerified || user.Email == "" {
+		http.Redirect(w, r, "/account", http.StatusFound)
+		return
+	}
+
+	token, err := h.auth.GenerateVerifyToken(userID)
+	if err != nil {
+		http.Error(w, i18n.T(r.Context(), "error.internal"), http.StatusInternalServerError)
+		return
+	}
+
+	if h.cfg.SMTPHost != "" {
+		verifyURL := fmt.Sprintf("%s/verify-email/%s", h.cfg.BaseURL, token)
+		go mail.SendEmailVerification(h.cfg, r.Context(), user.Email, verifyURL)
+	}
+
+	middleware.SetFlash(w, r, "success", i18n.T(r.Context(), "flash.verification_sent"))
 	http.Redirect(w, r, "/account", http.StatusFound)
 }
 

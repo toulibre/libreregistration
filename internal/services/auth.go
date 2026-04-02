@@ -52,12 +52,13 @@ func (s *AuthService) SeedAdmin(username, password string) error {
 
 	now := time.Now()
 	user := &models.User{
-		ID:           uuid.New().String(),
-		Username:     username,
-		PasswordHash: string(hash),
-		Role:         models.RoleAdmin,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:            uuid.New().String(),
+		Username:      username,
+		PasswordHash:  string(hash),
+		Role:          models.RoleAdmin,
+		EmailVerified: true,
+		CreatedAt:     now,
+		UpdatedAt:     now,
 	}
 
 	if err := s.users.Create(user); err != nil {
@@ -76,15 +77,16 @@ func (s *AuthService) CreateUser(username, name, email, avatarPath, password str
 
 	now := time.Now()
 	user := &models.User{
-		ID:           uuid.New().String(),
-		Username:     username,
-		Name:         name,
-		Email:        email,
-		AvatarPath:   avatarPath,
-		PasswordHash: string(hash),
-		Role:         role,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:            uuid.New().String(),
+		Username:      username,
+		Name:          name,
+		Email:         email,
+		AvatarPath:    avatarPath,
+		PasswordHash:  string(hash),
+		Role:          role,
+		EmailVerified: true, // admin-created users are verified
+		CreatedAt:     now,
+		UpdatedAt:     now,
 	}
 
 	return s.users.Create(user)
@@ -160,6 +162,29 @@ func (s *AuthService) ChangePassword(userID, currentPassword, newPassword string
 	return s.users.UpdatePassword(userID, string(hash))
 }
 
+func (s *AuthService) VerifyEmail(token string) (*models.User, error) {
+	user, err := s.users.GetByVerifyToken(token)
+	if err != nil {
+		return nil, fmt.Errorf("verify email: %w", err)
+	}
+	if user == nil {
+		return nil, nil
+	}
+	if err := s.users.VerifyEmail(user.ID); err != nil {
+		return nil, err
+	}
+	user.EmailVerified = true
+	return user, nil
+}
+
+func (s *AuthService) GenerateVerifyToken(userID string) (string, error) {
+	token := uuid.New().String()
+	if err := s.users.SetVerifyToken(userID, token); err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
 var ErrInvalidCurrentPassword = fmt.Errorf("invalid current password")
 var ErrUsernameTaken = fmt.Errorf("username already taken")
 
@@ -178,15 +203,21 @@ func (s *AuthService) Register(username, name, email, password string) (*models.
 	}
 
 	now := time.Now()
+	verifyToken := ""
+	if email != "" {
+		verifyToken = uuid.New().String()
+	}
 	user := &models.User{
-		ID:           uuid.New().String(),
-		Username:     username,
-		Name:         name,
-		Email:        email,
-		PasswordHash: string(hash),
-		Role:         models.RoleUser,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:               uuid.New().String(),
+		Username:         username,
+		Name:             name,
+		Email:            email,
+		PasswordHash:     string(hash),
+		Role:             models.RoleUser,
+		EmailVerified:    email == "", // no email = nothing to verify
+		EmailVerifyToken: verifyToken,
+		CreatedAt:        now,
+		UpdatedAt:        now,
 	}
 
 	if err := s.users.Create(user); err != nil {

@@ -7,8 +7,20 @@ import (
 	"github.com/toulibre/libreregistration/templates/layouts"
 )
 
-templ AccountDashboard(siteName string, accentColor string, displayName string, registrations []models.Registration, organizedEvents []models.Event) {
+templ AccountDashboard(siteName string, accentColor string, displayName string, registrations []models.Registration, organizedEvents []models.Event, emailVerified bool, flash string, csrfField string) {
 	@layouts.PublicShell(i18n.T(ctx, "account.title"), siteName, accentColor) {
+		if flash != "" {
+			<div data-flash class="bg-green-50 text-green-700 p-3 rounded mb-4 text-sm">{ flash }</div>
+		}
+		if !emailVerified {
+			<div class="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded mb-6 flex justify-between items-center">
+				<span class="text-sm">{ i18n.T(ctx, "account.email_not_verified") }</span>
+				<form method="POST" action="/account/resend-verification" class="inline">
+					@templ.Raw(csrfField)
+					<button type="submit" class="text-sm text-yellow-700 hover:text-yellow-900 underline font-medium">{ i18n.T(ctx, "account.resend_verification") }</button>
+				</form>
+			</div>
+		}
 		<div class="flex justify-between items-center mb-6">
 			<h1 class="text-2xl font-bold">{ i18n.T(ctx, "account.heading") }</h1>
 			<div class="flex gap-3 text-sm">

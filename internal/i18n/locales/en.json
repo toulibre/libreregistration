@@ -195,6 +195,8 @@
   "mail.confirmation_subject_fmt": "Registration confirmed: %s",
   "mail.confirmation_body_fmt": "Hello,\n\nYour registration for \"%s\" is confirmed.\n\nTo cancel your registration, visit:\n%s\n\nBest regards,\n%s",
   "mail.organizer_notification_subject_fmt": "New registration: %s",
+  "mail.verify_subject": "Verify your email address",
+  "mail.verify_body_fmt": "Hello,\n\nTo verify your email address, click the following link:\n%s\n\nIf you did not create an account, please ignore this email.\n\nBest regards,\n%s",
   "mail.organizer_notification_body_fmt": "Hello,\n\nA new registration has been recorded for \"%s\".\n\nAttendee: %s\nEmail: %s\n\nBest regards,\n%s",
 
   "password.title": "Change password",
@@ -231,6 +233,8 @@
   "account.no_registrations": "No registrations yet.",
   "account.col.event": "Event",
   "account.col.date": "Registration date",
+  "account.email_not_verified": "Your email address has not been verified yet.",
+  "account.resend_verification": "Resend verification email",
   "account.delete_link": "Delete my account",
   "account.profile.title": "My profile",
   "account.profile.heading": "My profile",
@@ -239,6 +243,8 @@
   "account.delete.warning": "This action is irreversible. Your account will be deleted and your personal data will be erased. Your registrations will be anonymized but kept for attendance tracking.",
   "account.delete.confirm": "Delete permanently",
 
+  "flash.email_verified": "Your email address has been verified.",
+  "flash.verification_sent": "A verification email has been sent.",
   "flash.profile_updated": "Profile updated.",
 
   "clone.suffix": "(copy)",

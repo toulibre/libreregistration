@@ -79,7 +79,7 @@ func run() error {
 
 	// Initialize handlers
 	healthHandler := handlers.NewHealthHandler(db)
-	authHandler := handlers.NewAuthHandler(authService, settingsService)
+	authHandler := handlers.NewAuthHandler(authService, settingsService, cfg)
 	eventHandler := handlers.NewEventHandler(eventService, registrationService, authService, settingsService, cfg.UploadDir, cfg.BaseURL)
 	registrationHandler := handlers.NewRegistrationHandler(registrationService, eventService, authService, settingsService)
 	adminHandler := handlers.NewAdminHandler(eventService, registrationService, authService, settingsService, cfg.UploadDir)
@@ -123,9 +123,10 @@ func run() error {
 	r.Post("/event/{slug}/cancel", registrationHandler.CancelByUser)
 	r.Get("/cancel/{token}", registrationHandler.Cancel)
 
-	// Self-registration
+	// Self-registration and email verification
 	r.Get("/register", authHandler.RegisterForm)
 	r.Post("/register", authHandler.RegisterUser)
+	r.Get("/verify-email/{token}", authHandler.VerifyEmail)
 
 	// Logout (any authenticated user)
 	r.Group(func(r chi.Router) {
@@ -142,6 +143,7 @@ func run() error {
 		r.Put("/profile", accountHandler.UpdateProfile)
 		r.Get("/password", accountHandler.PasswordForm)
 		r.Put("/password", accountHandler.ChangePassword)
+		r.Post("/resend-verification", authHandler.ResendVerification)
 		r.Get("/delete", accountHandler.DeleteForm)
 		r.Post("/delete", accountHandler.DeleteAccount)
 		r.Get("/events/{id}/attendees", accountHandler.OrganizerAttendees)

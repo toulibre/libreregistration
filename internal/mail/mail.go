@@ -28,6 +28,15 @@ func SendOrganizerNotification(cfg *config.Config, ctx context.Context, to, atte
 	}
 }
 
+func SendEmailVerification(cfg *config.Config, ctx context.Context, to, verifyURL string) {
+	subject := i18n.T(ctx, "mail.verify_subject")
+	body := i18n.Tf(ctx, "mail.verify_body_fmt", verifyURL, cfg.SMTPFrom)
+
+	if err := send(cfg, to, subject, body); err != nil {
+		log.Printf("Failed to send verification email to %s: %v", to, err)
+	}
+}
+
 func send(cfg *config.Config, to, subject, body string) error {
 	addr := fmt.Sprintf("%s:%s", cfg.SMTPHost, cfg.SMTPPort)
 	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n%s",

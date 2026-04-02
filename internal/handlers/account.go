@@ -28,11 +28,19 @@ func NewAccountHandler(auth *services.AuthService, events *services.EventService
 
 func (h *AccountHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r)
+	user, _ := h.auth.GetUser(userID)
 	regs, _ := h.registrations.ListByUser(userID)
 	organizedEvents, _ := h.events.ListByOrganizer(userID)
 
+	emailVerified := user == nil || user.EmailVerified || user.Email == ""
 	siteName, accentColor := h.settings.GetSiteSettings()
-	public.AccountDashboard(siteName, accentColor, middleware.GetDisplayName(r), regs, organizedEvents).Render(r.Context(), w)
+	flashes := middleware.GetFlashes(w, r, "success")
+	flash := ""
+	if len(flashes) > 0 {
+		flash = flashes[0]
+	}
+	csrfField := middleware.CSRFTemplateField(r)
+	public.AccountDashboard(siteName, accentColor, middleware.GetDisplayName(r), regs, organizedEvents, emailVerified, flash, csrfField).Render(r.Context(), w)
 }
 
 func (h *AccountHandler) ProfileForm(w http.ResponseWriter, r *http.Request) {

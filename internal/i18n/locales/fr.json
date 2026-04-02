@@ -195,6 +195,8 @@
   "mail.confirmation_subject_fmt": "Inscription confirm\u00e9e : %s",
   "mail.confirmation_body_fmt": "Bonjour,\n\nVotre inscription \u00e0 \u00ab %s \u00bb est confirm\u00e9e.\n\nPour annuler votre inscription, rendez-vous sur :\n%s\n\nCordialement,\n%s",
   "mail.organizer_notification_subject_fmt": "Nouvelle inscription : %s",
+  "mail.verify_subject": "V\u00e9rifiez votre adresse e-mail",
+  "mail.verify_body_fmt": "Bonjour,\n\nPour v\u00e9rifier votre adresse e-mail, cliquez sur le lien suivant :\n%s\n\nSi vous n'avez pas cr\u00e9\u00e9 de compte, ignorez cet e-mail.\n\nCordialement,\n%s",
   "mail.organizer_notification_body_fmt": "Bonjour,\n\nUne nouvelle inscription a \u00e9t\u00e9 enregistr\u00e9e pour \u00ab %s \u00bb.\n\nParticipant : %s\nE-mail : %s\n\nCordialement,\n%s",
 
   "password.title": "Changer le mot de passe",
@@ -231,6 +233,8 @@
   "account.no_registrations": "Aucune inscription pour le moment.",
   "account.col.event": "\u00c9v\u00e9nement",
   "account.col.date": "Date d'inscription",
+  "account.email_not_verified": "Votre adresse e-mail n'a pas encore \u00e9t\u00e9 v\u00e9rifi\u00e9e.",
+  "account.resend_verification": "Renvoyer l'e-mail de v\u00e9rification",
   "account.delete_link": "Supprimer mon compte",
   "account.profile.title": "Mon profil",
   "account.profile.heading": "Mon profil",
@@ -239,6 +243,8 @@
   "account.delete.warning": "Cette action est irr\u00e9versible. Votre compte sera supprim\u00e9 et vos donn\u00e9es personnelles seront effac\u00e9es. Vos inscriptions seront anonymis\u00e9es mais conserv\u00e9es pour le suivi des participations.",
   "account.delete.confirm": "Supprimer d\u00e9finitivement",
 
+  "flash.email_verified": "Votre adresse e-mail a \u00e9t\u00e9 v\u00e9rifi\u00e9e.",
+  "flash.verification_sent": "Un e-mail de v\u00e9rification a \u00e9t\u00e9 envoy\u00e9.",
   "flash.profile_updated": "Profil mis \u00e0 jour.",
 
   "clone.suffix": "(copie)",
