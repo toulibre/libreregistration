@@ -128,6 +128,10 @@ func (s *RegistrationService) ListByUser(userID string) ([]models.Registration, 
 	return s.registrations.ListByUser(userID)
 }
 
+func (s *RegistrationService) CancelByUser(userID, eventID string) error {
+	return s.registrations.DeleteByUserAndEvent(userID, eventID)
+}
+
 func (s *RegistrationService) IsUserRegistered(userID, eventID string) bool {
 	exists, err := s.registrations.ExistsByUserAndEvent(userID, eventID)
 	return err == nil && exists

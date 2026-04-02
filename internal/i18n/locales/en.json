@@ -17,6 +17,7 @@
   "event.label.comment": "Comment (optional)",
   "event.label.captcha": "Anti-spam: what is",
   "event.registering_as": "Registering as",
+  "event.cancel_registration": "Cancel my registration",
   "event.register_button": "Register",
   "event.registration_full": "Registrations are full.",
   "event.registration_closed": "Registrations are not open.",

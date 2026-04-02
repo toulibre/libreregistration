@@ -88,7 +88,13 @@ templ Event(event *models.Event, registrations []models.Registration, csrfField 
 			}
 			if event.RegistrationOpen {
 				if alreadyRegistered {
-					<div class="bg-blue-50 text-blue-700 p-4 rounded mb-6">{ i18n.T(ctx, "event.already_registered") }</div>
+					<div class="bg-blue-50 text-blue-700 p-4 rounded mb-6 flex justify-between items-center">
+						<span>{ i18n.T(ctx, "event.already_registered") }</span>
+						<form method="POST" action={ templ.SafeURL("/event/" + event.Slug + "/cancel") }>
+							@templ.Raw(csrfField)
+							<button type="submit" class="text-sm text-blue-600 hover:text-blue-800 underline">{ i18n.T(ctx, "event.cancel_registration") }</button>
+						</form>
+					</div>
 				} else if event.MaxCapacity == nil || event.RegistrationCount < *event.MaxCapacity {
 					<div class="bg-white rounded-lg shadow-sm p-6 mb-8">
 						<h2 class="text-xl font-semibold mb-4">{ i18n.T(ctx, "event.register_heading") }</h2>

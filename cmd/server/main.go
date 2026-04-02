@@ -120,6 +120,7 @@ func run() error {
 	r.Get("/event/{slug}", eventHandler.Show)
 	r.Get("/event/{slug}/ical", eventHandler.ICal)
 	r.Post("/event/{slug}/register", registrationHandler.Register)
+	r.Post("/event/{slug}/cancel", registrationHandler.CancelByUser)
 	r.Get("/cancel/{token}", registrationHandler.Cancel)
 
 	// Self-registration

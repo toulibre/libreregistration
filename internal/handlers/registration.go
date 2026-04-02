@@ -126,6 +126,29 @@ func (h *RegistrationHandler) Cancel(w http.ResponseWriter, r *http.Request) {
 	public.Event(event, regs, csrfField, siteName, accentColor, "", i18n.T(r.Context(), "flash.registration_canceled"), captchaQuestion, nil, "", false).Render(r.Context(), w)
 }
 
+func (h *RegistrationHandler) CancelByUser(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+	userID := middleware.GetUserID(r)
+	if userID == "" {
+		http.Redirect(w, r, "/admin/login", http.StatusFound)
+		return
+	}
+
+	event, err := h.events.GetBySlug(slug)
+	if err != nil || event == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	if err := h.registrations.CancelByUser(userID, event.ID); err != nil {
+		http.Error(w, i18n.T(r.Context(), "error.internal"), http.StatusInternalServerError)
+		return
+	}
+
+	middleware.SetFlash(w, r, "success", i18n.T(r.Context(), "flash.registration_canceled"))
+	http.Redirect(w, r, "/event/"+slug, http.StatusFound)
+}
+
 func mapRegistrationError(ctx context.Context, err error) string {
 	switch {
 	case errors.Is(err, services.ErrEventNotFound):
