@@ -1,12 +1,13 @@
 package public
 
 import (
+	"fmt"
 	"github.com/toulibre/libreregistration/internal/i18n"
 	"github.com/toulibre/libreregistration/internal/models"
 	"github.com/toulibre/libreregistration/templates/layouts"
 )
 
-templ AccountDashboard(siteName string, accentColor string, displayName string, registrations []models.Registration) {
+templ AccountDashboard(siteName string, accentColor string, displayName string, registrations []models.Registration, organizedEvents []models.Event) {
 	@layouts.PublicShell(i18n.T(ctx, "account.title"), siteName, accentColor) {
 		<div class="flex justify-between items-center mb-6">
 			<h1 class="text-2xl font-bold">{ i18n.T(ctx, "account.heading") }</h1>
@@ -18,6 +19,41 @@ templ AccountDashboard(siteName string, accentColor string, displayName string, 
 				</form>
 			</div>
 		</div>
+		if len(organizedEvents) > 0 {
+			<h2 class="text-lg font-semibold mb-4">{ i18n.T(ctx, "account.organized_events") }</h2>
+			<div class="bg-white rounded-lg shadow-sm overflow-x-auto mb-8">
+				<table class="w-full">
+					<thead class="bg-gray-50">
+						<tr>
+							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.title") }</th>
+							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.date") }</th>
+							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.registrations") }</th>
+							<th class="text-right px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.actions") }</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-gray-100">
+						for _, event := range organizedEvents {
+							<tr>
+								<td class="px-4 py-3">
+									<a href={ templ.SafeURL("/event/" + event.Slug) } class="text-accent hover:underline font-medium">{ event.Title }</a>
+								</td>
+								<td class="px-4 py-3 text-sm text-gray-500">{ i18n.FormatDate(ctx, event.EventDate) }</td>
+								<td class="px-4 py-3 text-sm text-gray-500">
+									if event.MaxCapacity != nil {
+										{ fmt.Sprintf("%d / %d", event.RegistrationCount, *event.MaxCapacity) }
+									} else {
+										{ fmt.Sprintf("%d", event.RegistrationCount) }
+									}
+								</td>
+								<td class="px-4 py-3 text-right text-sm">
+									<a href={ templ.SafeURL(fmt.Sprintf("/account/events/%s/attendees", event.ID)) } class="text-accent hover:underline">{ i18n.T(ctx, "events.action.attendees") }</a>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
 		<h2 class="text-lg font-semibold mb-4">{ i18n.T(ctx, "account.registrations") }</h2>
 		if len(registrations) == 0 {
 			<p class="text-gray-500">{ i18n.T(ctx, "account.no_registrations") }</p>

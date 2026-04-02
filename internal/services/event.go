@@ -140,6 +140,15 @@ func (s *EventService) GetOrganizerIDs(eventID string) ([]string, error) {
 	return s.events.GetOrganizerIDs(eventID)
 }
 
+func (s *EventService) ListByOrganizer(userID string) ([]models.Event, error) {
+	return s.events.ListByOrganizer(userID)
+}
+
+func (s *EventService) IsOrganizer(eventID, userID string) bool {
+	ok, err := s.events.IsOrganizer(eventID, userID)
+	return err == nil && ok
+}
+
 func (s *EventService) GetOrganizerEmails(eventID string) ([]string, error) {
 	return s.events.GetOrganizerEmails(eventID)
 }

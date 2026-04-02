@@ -1,8 +1,12 @@
 package handlers
 
 import (
+	"encoding/csv"
 	"errors"
+	"fmt"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 
 	"github.com/toulibre/libreregistration/internal/i18n"
 	"github.com/toulibre/libreregistration/internal/middleware"
@@ -12,21 +16,23 @@ import (
 
 type AccountHandler struct {
 	auth          *services.AuthService
+	events        *services.EventService
 	registrations *services.RegistrationService
 	settings      *services.SettingsService
 	uploadDir     string
 }
 
-func NewAccountHandler(auth *services.AuthService, registrations *services.RegistrationService, settings *services.SettingsService, uploadDir string) *AccountHandler {
-	return &AccountHandler{auth: auth, registrations: registrations, settings: settings, uploadDir: uploadDir}
+func NewAccountHandler(auth *services.AuthService, events *services.EventService, registrations *services.RegistrationService, settings *services.SettingsService, uploadDir string) *AccountHandler {
+	return &AccountHandler{auth: auth, events: events, registrations: registrations, settings: settings, uploadDir: uploadDir}
 }
 
 func (h *AccountHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r)
 	regs, _ := h.registrations.ListByUser(userID)
+	organizedEvents, _ := h.events.ListByOrganizer(userID)
 
 	siteName, accentColor := h.settings.GetSiteSettings()
-	public.AccountDashboard(siteName, accentColor, middleware.GetDisplayName(r), regs).Render(r.Context(), w)
+	public.AccountDashboard(siteName, accentColor, middleware.GetDisplayName(r), regs, organizedEvents).Render(r.Context(), w)
 }
 
 func (h *AccountHandler) ProfileForm(w http.ResponseWriter, r *http.Request) {
@@ -176,4 +182,65 @@ func (h *AccountHandler) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	session.Save(r, w)
 
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+// Organizer routes
+
+func (h *AccountHandler) requireOrganizer(w http.ResponseWriter, r *http.Request) (string, bool) {
+	eventID := chi.URLParam(r, "id")
+	userID := middleware.GetUserID(r)
+	if !h.events.IsOrganizer(eventID, userID) {
+		http.Error(w, i18n.T(r.Context(), "error.forbidden"), http.StatusForbidden)
+		return "", false
+	}
+	return eventID, true
+}
+
+func (h *AccountHandler) OrganizerAttendees(w http.ResponseWriter, r *http.Request) {
+	eventID, ok := h.requireOrganizer(w, r)
+	if !ok {
+		return
+	}
+
+	event, err := h.events.GetByID(eventID)
+	if err != nil || event == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	regs, _ := h.registrations.ListByEvent(eventID)
+	siteName, accentColor := h.settings.GetSiteSettings()
+	public.OrganizerAttendees(event, regs, siteName, accentColor).Render(r.Context(), w)
+}
+
+func (h *AccountHandler) OrganizerAttendeesCSV(w http.ResponseWriter, r *http.Request) {
+	eventID, ok := h.requireOrganizer(w, r)
+	if !ok {
+		return
+	}
+
+	ctx := r.Context()
+	event, err := h.events.GetByID(eventID)
+	if err != nil || event == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	regs, _ := h.registrations.ListByEvent(eventID)
+
+	filename := fmt.Sprintf(i18n.T(ctx, "csv.filename_fmt"), event.Slug)
+	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
+
+	writer := csv.NewWriter(w)
+	writer.Write([]string{
+		i18n.T(ctx, "csv.name"),
+		i18n.T(ctx, "csv.email"),
+		i18n.T(ctx, "csv.comment"),
+		i18n.T(ctx, "csv.registered_at"),
+	})
+	for _, reg := range regs {
+		writer.Write([]string{reg.Name, reg.Email, reg.Comment, i18n.FormatDateTimeCSV(ctx, reg.RegisteredAt)})
+	}
+	writer.Flush()
 }

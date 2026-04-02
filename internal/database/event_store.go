@@ -142,6 +142,16 @@ func (s *EventStore) GetOrganizerIDs(eventID string) ([]string, error) {
 	return ids, rows.Err()
 }
 
+func (s *EventStore) ListByOrganizer(userID string) ([]models.Event, error) {
+	return s.listEvents(`JOIN event_organizers eo ON eo.event_id = e.id WHERE eo.user_id = ? ORDER BY e.event_date DESC`, userID)
+}
+
+func (s *EventStore) IsOrganizer(eventID, userID string) (bool, error) {
+	var count int
+	err := s.db.QueryRow("SELECT COUNT(*) FROM event_organizers WHERE event_id = ? AND user_id = ?", eventID, userID).Scan(&count)
+	return count > 0, err
+}
+
 func (s *EventStore) GetOrganizerEmails(eventID string) ([]string, error) {
 	rows, err := s.db.Query(`SELECT u.email FROM users u
 		JOIN event_organizers eo ON eo.user_id = u.id

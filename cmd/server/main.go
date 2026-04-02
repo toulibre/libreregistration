@@ -83,7 +83,7 @@ func run() error {
 	eventHandler := handlers.NewEventHandler(eventService, registrationService, authService, settingsService, cfg.UploadDir, cfg.BaseURL)
 	registrationHandler := handlers.NewRegistrationHandler(registrationService, eventService, authService, settingsService)
 	adminHandler := handlers.NewAdminHandler(eventService, registrationService, authService, settingsService, cfg.UploadDir)
-	accountHandler := handlers.NewAccountHandler(authService, registrationService, settingsService, cfg.UploadDir)
+	accountHandler := handlers.NewAccountHandler(authService, eventService, registrationService, settingsService, cfg.UploadDir)
 
 	// Router
 	r := chi.NewRouter()
@@ -143,6 +143,8 @@ func run() error {
 		r.Put("/password", accountHandler.ChangePassword)
 		r.Get("/delete", accountHandler.DeleteForm)
 		r.Post("/delete", accountHandler.DeleteAccount)
+		r.Get("/events/{id}/attendees", accountHandler.OrganizerAttendees)
+		r.Get("/events/{id}/attendees/csv", accountHandler.OrganizerAttendeesCSV)
 	})
 
 	// Admin routes
