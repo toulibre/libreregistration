@@ -254,5 +254,8 @@
   "notfound.message": "La page que vous recherchez n'existe pas ou a \u00e9t\u00e9 d\u00e9plac\u00e9e.",
   "notfound.back_home": "\u2190 Retour \u00e0 l'accueil",
 
+  "filter.placeholder": "Filtrer\u2026",
+  "filter.no_results": "Aucun r\u00e9sultat.",
+
   "lang.switch": "English"
 }

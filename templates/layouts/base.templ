@@ -41,6 +41,7 @@ templ Base(title string, siteName string, accentColor string, og *OGMeta) {
 		<body class="min-h-screen bg-gray-50 text-gray-900">
 			{ children... }
 			@preventDoubleSubmit()
+			@tableFilterScript()
 		</body>
 	</html>
 }
@@ -164,6 +165,39 @@ templ langSwitcher() {
 	} else {
 		<a href="?lang=fr" class="text-sm text-gray-400 hover:text-white">{ i18n.T(ctx, "lang.switch") }</a>
 	}
+}
+
+templ TableFilter(tableID string) {
+	<div class="mb-4">
+		<input
+			type="text"
+			data-filter-target={ tableID }
+			placeholder={ i18n.T(ctx, "filter.placeholder") }
+			class="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+		/>
+	</div>
+}
+
+templ tableFilterScript() {
+	<script>
+	document.addEventListener('input', function(e) {
+		var target = e.target.getAttribute('data-filter-target');
+		if (!target) return;
+		var table = document.getElementById(target);
+		if (!table) return;
+		var q = e.target.value.toLowerCase();
+		var rows = table.querySelectorAll('tbody tr');
+		var visible = 0;
+		rows.forEach(function(row) {
+			var text = row.textContent.toLowerCase();
+			var match = !q || text.indexOf(q) !== -1;
+			row.style.display = match ? '' : 'none';
+			if (match) visible++;
+		});
+		var empty = table.parentElement.querySelector('[data-filter-empty]');
+		if (empty) empty.style.display = (q && visible === 0) ? '' : 'none';
+	});
+	</script>
 }
 
 templ preventDoubleSubmit() {

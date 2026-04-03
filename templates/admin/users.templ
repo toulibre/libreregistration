@@ -25,8 +25,10 @@ templ Users(users []models.User, siteName string, accentColor string, displayNam
 		if flash != "" {
 			<div data-flash class="bg-green-50 text-green-700 p-3 rounded mb-4 text-sm">{ flash }</div>
 		}
+		@layouts.TableFilter("users-table")
 		<div class="bg-white rounded-lg shadow-sm overflow-x-auto">
-			<table class="w-full">
+			<p data-filter-empty class="text-gray-500 text-sm p-4" style="display:none">{ i18n.T(ctx, "filter.no_results") }</p>
+			<table id="users-table" class="w-full">
 				<thead class="bg-gray-50">
 					<tr>
 						<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "users.col.login") }</th>

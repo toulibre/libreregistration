@@ -254,5 +254,8 @@
   "notfound.message": "The page you are looking for does not exist or has been moved.",
   "notfound.back_home": "\u2190 Back to home",
 
+  "filter.placeholder": "Filter\u2026",
+  "filter.no_results": "No results.",
+
   "lang.switch": "Fran\u00e7ais"
 }

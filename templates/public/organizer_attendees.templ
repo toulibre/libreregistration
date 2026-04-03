@@ -22,8 +22,10 @@ templ OrganizerAttendees(event *models.Event, registrations []models.Registratio
 		if len(registrations) == 0 {
 			<p class="text-gray-500">{ i18n.T(ctx, "attendees.empty") }</p>
 		} else {
+			@layouts.TableFilter("org-attendees-table")
 			<div class="bg-white rounded-lg shadow-sm overflow-x-auto">
-				<table class="w-full">
+				<p data-filter-empty class="text-gray-500 text-sm p-4" style="display:none">{ i18n.T(ctx, "filter.no_results") }</p>
+				<table id="org-attendees-table" class="w-full">
 					<thead class="bg-gray-50">
 						<tr>
 							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "attendees.col.name") }</th>
