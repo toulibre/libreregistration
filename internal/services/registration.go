@@ -80,7 +80,12 @@ func (s *RegistrationService) Register(ctx context.Context, eventID, name, email
 
 	// Send confirmation email if email provided and SMTP configured
 	if email != "" && s.cfg.SMTPHost != "" {
-		cancelURL := fmt.Sprintf("%s/cancel/%s", s.cfg.BaseURL, reg.CancelToken)
+		var cancelURL string
+		if userID != nil {
+			cancelURL = fmt.Sprintf("%s/event/%s", s.cfg.BaseURL, event.Slug)
+		} else {
+			cancelURL = fmt.Sprintf("%s/cancel/%s", s.cfg.BaseURL, reg.CancelToken)
+		}
 		go mail.SendConfirmation(s.cfg, ctx, email, event.Title, cancelURL)
 	}
 
