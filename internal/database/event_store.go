@@ -124,6 +124,26 @@ func (s *EventStore) SetOrganizers(eventID string, userIDs []string) error {
 	return tx.Commit()
 }
 
+func (s *EventStore) GetOrganizers(eventID string) ([]models.User, error) {
+	rows, err := s.db.Query(`SELECT u.id, u.username, u.name, u.email, u.avatar_path, u.password_hash, u.role, u.email_verified, u.email_verify_token, u.created_at, u.updated_at
+		FROM users u JOIN event_organizers eo ON eo.user_id = u.id
+		WHERE eo.event_id = ?`, eventID)
+	if err != nil {
+		return nil, fmt.Errorf("get organizers: %w", err)
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var u models.User
+		if err := rows.Scan(&u.ID, &u.Username, &u.Name, &u.Email, &u.AvatarPath, &u.PasswordHash, &u.Role, &u.EmailVerified, &u.EmailVerifyToken, &u.CreatedAt, &u.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan organizer: %w", err)
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
+}
+
 func (s *EventStore) GetOrganizerIDs(eventID string) ([]string, error) {
 	rows, err := s.db.Query("SELECT user_id FROM event_organizers WHERE event_id = ?", eventID)
 	if err != nil {

@@ -95,7 +95,8 @@ func (h *EventHandler) Show(w http.ResponseWriter, r *http.Request) {
 	} else {
 		alreadyRegistered = h.registrations.IsUserRegistered(uid, event.ID)
 	}
-	public.Event(event, regs, csrfField, siteName, accentColor, flash, "", captchaQuestion, og, jsonLD, alreadyRegistered).Render(r.Context(), w)
+	organizers, _ := h.events.GetOrganizers(event.ID)
+	public.Event(event, regs, organizers, csrfField, siteName, accentColor, flash, "", captchaQuestion, og, jsonLD, alreadyRegistered).Render(r.Context(), w)
 }
 
 func (h *EventHandler) ICal(w http.ResponseWriter, r *http.Request) {

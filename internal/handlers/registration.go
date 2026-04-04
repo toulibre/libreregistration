@@ -92,7 +92,7 @@ func (h *RegistrationHandler) renderError(w http.ResponseWriter, r *http.Request
 		captchaQuestion = captcha.Generate(w, r).Question
 	}
 	w.WriteHeader(http.StatusBadRequest)
-	public.Event(event, regs, csrfField, siteName, accentColor, "", errMsg, captchaQuestion, nil, "", false).Render(r.Context(), w)
+	public.Event(event, regs, nil, csrfField, siteName, accentColor, "", errMsg, captchaQuestion, nil, "", false).Render(r.Context(), w)
 }
 
 func (h *RegistrationHandler) Cancel(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +123,7 @@ func (h *RegistrationHandler) Cancel(w http.ResponseWriter, r *http.Request) {
 	if middleware.GetUserID(r) == "" {
 		captchaQuestion = captcha.Generate(w, r).Question
 	}
-	public.Event(event, regs, csrfField, siteName, accentColor, "", i18n.T(r.Context(), "flash.registration_canceled"), captchaQuestion, nil, "", false).Render(r.Context(), w)
+	public.Event(event, regs, nil, csrfField, siteName, accentColor, "", i18n.T(r.Context(), "flash.registration_canceled"), captchaQuestion, nil, "", false).Render(r.Context(), w)
 }
 
 func (h *RegistrationHandler) CancelByUser(w http.ResponseWriter, r *http.Request) {

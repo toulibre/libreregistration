@@ -136,6 +136,10 @@ func (s *EventService) SetOrganizers(eventID string, userIDs []string) error {
 	return s.events.SetOrganizers(eventID, userIDs)
 }
 
+func (s *EventService) GetOrganizers(eventID string) ([]models.User, error) {
+	return s.events.GetOrganizers(eventID)
+}
+
 func (s *EventService) GetOrganizerIDs(eventID string) ([]string, error) {
 	return s.events.GetOrganizerIDs(eventID)
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/toulibre/libreregistration/templates/layouts"
 )
 
-templ Event(event *models.Event, registrations []models.Registration, csrfField string, siteName string, accentColor string, flash string, cancelMsg string, captchaQuestion string, og *layouts.OGMeta, jsonLD string, alreadyRegistered bool) {
+templ Event(event *models.Event, registrations []models.Registration, organizers []models.User, csrfField string, siteName string, accentColor string, flash string, cancelMsg string, captchaQuestion string, og *layouts.OGMeta, jsonLD string, alreadyRegistered bool) {
 	@layouts.PublicShellOG(event.Title, siteName, accentColor, og) {
 		if jsonLD != "" {
 			@templ.Raw(`<script type="application/ld+json">` + jsonLD + `</script>`)
@@ -28,6 +28,19 @@ templ Event(event *models.Event, registrations []models.Registration, csrfField 
 					{ i18n.T(ctx, "event.add_to_calendar") }
 				</a>
 			</div>
+			if len(organizers) > 0 {
+				<div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-6">
+					<span>{ i18n.T(ctx, "event.organized_by") }</span>
+					for _, org := range organizers {
+						<span class="inline-flex items-center gap-1.5">
+							if org.AvatarPath != "" {
+								<img src={ "/uploads/" + org.AvatarPath } class="w-6 h-6 rounded-full object-cover" alt={ org.DisplayName() }/>
+							}
+							<span class="font-medium text-gray-700">{ org.DisplayName() }</span>
+						</span>
+					}
+				</div>
+			}
 			if event.MaxCapacity != nil {
 				<div class="mb-6">
 					<div class="flex justify-between text-sm mb-1">
