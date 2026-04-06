@@ -255,6 +255,11 @@
   "notfound.message": "The page you are looking for does not exist or has been moved.",
   "notfound.back_home": "\u2190 Back to home",
 
+  "pagination.showing_fmt": "%d\u2013%d of %d",
+  "pagination.prev": "Previous",
+  "pagination.next": "Next",
+  "pagination.per_page": "Per page:",
+
   "filter.placeholder": "Filter\u2026",
   "filter.no_results": "No results.",
 

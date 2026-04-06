@@ -71,3 +71,41 @@ type Setting struct {
 	Key   string
 	Value string
 }
+
+type Pagination struct {
+	Page       int
+	PageSize   int
+	TotalItems int
+	TotalPages int
+}
+
+func NewPagination(page, pageSize, totalItems int) Pagination {
+	totalPages := (totalItems + pageSize - 1) / pageSize
+	if totalPages < 1 {
+		totalPages = 1
+	}
+	if page < 1 {
+		page = 1
+	}
+	if page > totalPages {
+		page = totalPages
+	}
+	return Pagination{
+		Page:       page,
+		PageSize:   pageSize,
+		TotalItems: totalItems,
+		TotalPages: totalPages,
+	}
+}
+
+func (p Pagination) Offset() int {
+	return (p.Page - 1) * p.PageSize
+}
+
+func (p Pagination) HasPrev() bool {
+	return p.Page > 1
+}
+
+func (p Pagination) HasNext() bool {
+	return p.Page < p.TotalPages
+}

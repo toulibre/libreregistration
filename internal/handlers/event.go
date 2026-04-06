@@ -37,13 +37,14 @@ func NewEventHandler(events *services.EventService, registrations *services.Regi
 // Public routes
 
 func (h *EventHandler) Home(w http.ResponseWriter, r *http.Request) {
-	events, err := h.events.ListUpcoming()
+	page, pageSize := parsePagination(r, 25)
+	events, pag, err := h.events.ListUpcomingPaged(page, pageSize)
 	if err != nil {
 		http.Error(w, i18n.T(r.Context(), "error.internal"), http.StatusInternalServerError)
 		return
 	}
 	siteName, accentColor := h.settings.GetSiteSettings()
-	public.Home(events, siteName, accentColor).Render(r.Context(), w)
+	public.Home(events, pag, siteName, accentColor).Render(r.Context(), w)
 }
 
 func (h *EventHandler) Show(w http.ResponseWriter, r *http.Request) {
@@ -151,7 +152,8 @@ func icalEscape(s string) string {
 // Admin routes
 
 func (h *EventHandler) List(w http.ResponseWriter, r *http.Request) {
-	events, err := h.events.ListAll()
+	page, pageSize := parsePagination(r, 25)
+	events, pag, err := h.events.ListAllPaged(page, pageSize)
 	if err != nil {
 		http.Error(w, i18n.T(r.Context(), "error.internal"), http.StatusInternalServerError)
 		return
@@ -163,7 +165,7 @@ func (h *EventHandler) List(w http.ResponseWriter, r *http.Request) {
 	if len(flashes) > 0 {
 		flash = flashes[0]
 	}
-	admin.Events(events, siteName, accentColor, middleware.GetDisplayName(r), csrfField, flash).Render(r.Context(), w)
+	admin.Events(events, pag, siteName, accentColor, middleware.GetDisplayName(r), csrfField, flash).Render(r.Context(), w)
 }
 
 func (h *EventHandler) NewForm(w http.ResponseWriter, r *http.Request) {
@@ -500,6 +502,21 @@ func buildEventJSONLD(event *models.Event, baseURL string, siteName string) stri
 		return ""
 	}
 	return string(data)
+}
+
+func parsePagination(r *http.Request, defaultSize int) (page, pageSize int) {
+	page = 1
+	pageSize = defaultSize
+	if v, err := strconv.Atoi(r.URL.Query().Get("page")); err == nil && v > 0 {
+		page = v
+	}
+	if v, err := strconv.Atoi(r.URL.Query().Get("per_page")); err == nil {
+		switch v {
+		case 25, 50, 200:
+			pageSize = v
+		}
+	}
+	return
 }
 
 func truncate(s string, maxLen int) string {

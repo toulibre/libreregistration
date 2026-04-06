@@ -6,7 +6,7 @@ import (
 	"github.com/toulibre/libreregistration/templates/layouts"
 )
 
-templ Home(events []models.Event, siteName string, accentColor string) {
+templ Home(events []models.Event, pag models.Pagination, siteName string, accentColor string) {
 	@layouts.PublicShell(i18n.T(ctx, "home.title"), siteName, accentColor) {
 		<h1 class="text-3xl font-bold mb-8">{ i18n.T(ctx, "home.heading") }</h1>
 		if len(events) == 0 {
@@ -24,6 +24,10 @@ templ Home(events []models.Event, siteName string, accentColor string) {
 						</div>
 					</a>
 				}
+			</div>
+			<div class="flex justify-between items-center mt-6">
+				@layouts.PageSizeSelector(pag.PageSize, "/")
+				@layouts.Pagination(pag, "/")
 			</div>
 		}
 	}

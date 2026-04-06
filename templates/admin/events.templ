@@ -13,7 +13,7 @@ script confirmSubmit(msg string) {
 	}
 }
 
-templ Events(events []models.Event, siteName string, accentColor string, username string, csrfField string, flash string) {
+templ Events(events []models.Event, pag models.Pagination, siteName string, accentColor string, username string, csrfField string, flash string) {
 	@layouts.AdminShell(i18n.T(ctx, "events.title"), siteName, accentColor, username) {
 		<div class="flex justify-between items-center mb-6">
 			<h1 class="text-2xl font-bold">{ i18n.T(ctx, "events.heading") }</h1>
@@ -79,6 +79,10 @@ templ Events(events []models.Event, siteName string, accentColor string, usernam
 						}
 					</tbody>
 				</table>
+			</div>
+			<div class="flex justify-between items-center mt-4">
+				@layouts.PageSizeSelector(pag.PageSize, "/admin/events")
+				@layouts.Pagination(pag, "/admin/events")
 			</div>
 		}
 	}

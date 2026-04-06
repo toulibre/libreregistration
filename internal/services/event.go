@@ -86,8 +86,28 @@ func (s *EventService) ListUpcoming() ([]models.Event, error) {
 	return s.events.ListUpcoming()
 }
 
+func (s *EventService) ListUpcomingPaged(page, pageSize int) ([]models.Event, models.Pagination, error) {
+	total, err := s.events.CountUpcoming()
+	if err != nil {
+		return nil, models.Pagination{}, err
+	}
+	pag := models.NewPagination(page, pageSize, total)
+	events, err := s.events.ListUpcomingPaged(pag.PageSize, pag.Offset())
+	return events, pag, err
+}
+
 func (s *EventService) ListAll() ([]models.Event, error) {
 	return s.events.ListAll()
+}
+
+func (s *EventService) ListAllPaged(page, pageSize int) ([]models.Event, models.Pagination, error) {
+	total, err := s.events.Count()
+	if err != nil {
+		return nil, models.Pagination{}, err
+	}
+	pag := models.NewPagination(page, pageSize, total)
+	events, err := s.events.ListAllPaged(pag.PageSize, pag.Offset())
+	return events, pag, err
 }
 
 func (s *EventService) Delete(id string) error {

@@ -82,8 +82,16 @@ func (s *EventStore) ListUpcoming() ([]models.Event, error) {
 	return s.listEvents("WHERE e.event_date >= ? AND e.registration_open = true ORDER BY e.event_date ASC", time.Now())
 }
 
+func (s *EventStore) ListUpcomingPaged(limit, offset int) ([]models.Event, error) {
+	return s.listEvents(fmt.Sprintf("WHERE e.event_date >= ? AND e.registration_open = true ORDER BY e.event_date ASC LIMIT %d OFFSET %d", limit, offset), time.Now())
+}
+
 func (s *EventStore) ListAll() ([]models.Event, error) {
 	return s.listEvents("ORDER BY e.event_date DESC")
+}
+
+func (s *EventStore) ListAllPaged(limit, offset int) ([]models.Event, error) {
+	return s.listEvents(fmt.Sprintf("ORDER BY e.event_date DESC LIMIT %d OFFSET %d", limit, offset))
 }
 
 func (s *EventStore) Delete(id string) error {

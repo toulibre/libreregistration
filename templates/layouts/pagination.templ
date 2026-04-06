@@ -1,0 +1,56 @@
+package layouts
+
+import (
+	"fmt"
+	"strconv"
+
+	"github.com/toulibre/libreregistration/internal/i18n"
+	"github.com/toulibre/libreregistration/internal/models"
+)
+
+templ Pagination(pag models.Pagination, baseURL string) {
+	if pag.TotalPages > 1 {
+		<div class="flex items-center justify-between mt-6">
+			<div class="text-sm text-gray-500">
+				{ i18n.Tf(ctx, "pagination.showing_fmt", (pag.Page-1)*pag.PageSize+1, min(pag.Page*pag.PageSize, pag.TotalItems), pag.TotalItems) }
+			</div>
+			<div class="flex items-center gap-2">
+				if pag.HasPrev() {
+					<a href={ templ.SafeURL(paginationURL(baseURL, pag.Page-1, pag.PageSize)) } class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">&laquo; { i18n.T(ctx, "pagination.prev") }</a>
+				} else {
+					<span class="px-3 py-1 text-sm border border-gray-200 rounded text-gray-300">&laquo; { i18n.T(ctx, "pagination.prev") }</span>
+				}
+				<span class="text-sm text-gray-600">{ fmt.Sprintf("%d / %d", pag.Page, pag.TotalPages) }</span>
+				if pag.HasNext() {
+					<a href={ templ.SafeURL(paginationURL(baseURL, pag.Page+1, pag.PageSize)) } class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">{ i18n.T(ctx, "pagination.next") } &raquo;</a>
+				} else {
+					<span class="px-3 py-1 text-sm border border-gray-200 rounded text-gray-300">{ i18n.T(ctx, "pagination.next") } &raquo;</span>
+				}
+			</div>
+		</div>
+	}
+}
+
+templ PageSizeSelector(currentSize int, baseURL string) {
+	<div class="flex items-center gap-2 text-sm text-gray-500">
+		<span>{ i18n.T(ctx, "pagination.per_page") }</span>
+		for _, size := range []int{25, 50, 200} {
+			if size == currentSize {
+				<span class="px-2 py-0.5 bg-accent text-white rounded text-xs font-medium">{ strconv.Itoa(size) }</span>
+			} else {
+				<a href={ templ.SafeURL(paginationURL(baseURL, 1, size)) } class="px-2 py-0.5 border border-gray-300 rounded text-xs hover:bg-gray-50">{ strconv.Itoa(size) }</a>
+			}
+		}
+	</div>
+}
+
+func paginationURL(baseURL string, page, pageSize int) string {
+	return fmt.Sprintf("%s?page=%d&per_page=%d", baseURL, page, pageSize)
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}

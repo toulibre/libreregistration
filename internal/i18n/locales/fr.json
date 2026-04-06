@@ -255,6 +255,11 @@
   "notfound.message": "La page que vous recherchez n'existe pas ou a \u00e9t\u00e9 d\u00e9plac\u00e9e.",
   "notfound.back_home": "\u2190 Retour \u00e0 l'accueil",
 
+  "pagination.showing_fmt": "%d\u2013%d sur %d",
+  "pagination.prev": "Pr\u00e9c\u00e9dent",
+  "pagination.next": "Suivant",
+  "pagination.per_page": "Par page :",
+
   "filter.placeholder": "Filtrer\u2026",
   "filter.no_results": "Aucun r\u00e9sultat.",
 
