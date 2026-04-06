@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/sessions"
@@ -69,6 +70,7 @@ func run() error {
 	sessionStore.Options = &sessions.Options{
 		Path:     "/",
 		HttpOnly: true,
+		Secure:   strings.HasPrefix(cfg.BaseURL, "https://"),
 		MaxAge:   86400 * 7, // 7 days
 	}
 
@@ -94,7 +96,7 @@ func run() error {
 	r.Use(middleware.MethodOverride)
 	r.Use(middleware.Session(sessionStore))
 	r.Use(middleware.Locale)
-	r.Use(middleware.CSRF([]byte(cfg.CSRFKey), false))
+	r.Use(middleware.CSRF([]byte(cfg.CSRFKey), cfg.BaseURL))
 	r.Use(middleware.LoadUser)
 	r.Use(middleware.InjectSelfRegistration(settingsService.AllowSelfRegistration))
 

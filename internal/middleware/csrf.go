@@ -2,17 +2,27 @@ package middleware
 
 import (
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/gorilla/csrf"
 )
 
-func CSRF(key []byte, secure bool) func(http.Handler) http.Handler {
-	protect := csrf.Protect(
-		key,
+func CSRF(key []byte, baseURL string) func(http.Handler) http.Handler {
+	secure := strings.HasPrefix(baseURL, "https://")
+
+	opts := []csrf.Option{
 		csrf.Secure(secure),
 		csrf.Path("/"),
 		csrf.FieldName("csrf_token"),
-	)
+	}
+
+	// Trust the origin from BASE_URL so CSRF works behind a reverse proxy
+	if parsed, err := url.Parse(baseURL); err == nil && parsed.Host != "" {
+		opts = append(opts, csrf.TrustedOrigins([]string{parsed.Scheme + "://" + parsed.Host}))
+	}
+
+	protect := csrf.Protect(key, opts...)
 
 	if !secure {
 		return func(next http.Handler) http.Handler {

@@ -247,7 +247,7 @@ func startServer(cfg *config.Config, auth *services.AuthService, events *service
 	r.Use(middleware.MethodOverride)
 	r.Use(middleware.Session(sessionStore))
 	r.Use(middleware.Locale)
-	r.Use(middleware.CSRF([]byte(cfg.CSRFKey), false))
+	r.Use(middleware.CSRF([]byte(cfg.CSRFKey), cfg.BaseURL))
 	r.Use(middleware.LoadUser)
 
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
