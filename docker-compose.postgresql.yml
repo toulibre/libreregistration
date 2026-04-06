@@ -1,0 +1,36 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - uploads:/data/uploads
+    environment:
+      - UPLOAD_DIR=/data/uploads
+      - DATABASE_DRIVER=postgres
+      - DATABASE_URL=postgres://libreregistration:${POSTGRES_PASSWORD}@postgres:5432/libreregistration?sslmode=disable
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=libreregistration
+      - POSTGRES_USER=libreregistration
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U libreregistration"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  uploads:
+  pgdata:
