@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"strings"
@@ -33,6 +34,16 @@ func CSRF(key []byte, baseURL string) func(http.Handler) http.Handler {
 	}
 
 	return protect
+}
+
+const CSRFFieldKey contextKey = "csrf_field"
+
+// InjectCSRFField stores the CSRF hidden input in context so templates can use it without *http.Request.
+func InjectCSRFField(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), CSRFFieldKey, string(csrf.TemplateField(r)))
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func CSRFToken(r *http.Request) string {

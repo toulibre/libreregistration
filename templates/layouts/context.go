@@ -27,6 +27,11 @@ func AllowSelfRegistration(ctx context.Context) bool {
 	return v
 }
 
+func CtxCSRFField(ctx context.Context) string {
+	v, _ := ctx.Value(middleware.CSRFFieldKey).(string)
+	return v
+}
+
 func NavIsActive(ctx context.Context, prefix string) bool {
 	path, _ := ctx.Value(middleware.RequestPathKey).(string)
 	if prefix == "/admin/" {

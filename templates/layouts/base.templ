@@ -73,6 +73,7 @@ templ PublicShellOG(title string, siteName string, accentColor string, og *OGMet
 							<a href="/admin/" class="text-accent hover:text-accent-dark">{ CtxDisplayName(ctx) }</a>
 						}
 						<form method="POST" action="/logout" class="inline">
+							@templ.Raw(CtxCSRFField(ctx))
 							<button type="submit" class="text-gray-500 hover:text-gray-700">{ i18n.T(ctx, "nav.logout") }</button>
 						</form>
 					} else {
@@ -121,6 +122,7 @@ templ AdminShell(title string, siteName string, accentColor string, username str
 					<p class="mb-2">{ username }</p>
 					<a href="/admin/password" class="text-gray-400 hover:text-white underline">{ i18n.T(ctx, "nav.password") }</a>
 					<form method="POST" action="/logout" class="mt-1">
+						@templ.Raw(CtxCSRFField(ctx))
 						<button type="submit" class="text-gray-400 hover:text-white underline">{ i18n.T(ctx, "nav.logout") }</button>
 					</form>
 					<div class="mt-2">
