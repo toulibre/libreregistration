@@ -19,13 +19,14 @@ import (
 )
 
 type AuthHandler struct {
-	auth     *services.AuthService
-	settings *services.SettingsService
-	cfg      *config.Config
+	auth          *services.AuthService
+	registrations *services.RegistrationService
+	settings      *services.SettingsService
+	cfg           *config.Config
 }
 
-func NewAuthHandler(auth *services.AuthService, settings *services.SettingsService, cfg *config.Config) *AuthHandler {
-	return &AuthHandler{auth: auth, settings: settings, cfg: cfg}
+func NewAuthHandler(auth *services.AuthService, registrations *services.RegistrationService, settings *services.SettingsService, cfg *config.Config) *AuthHandler {
+	return &AuthHandler{auth: auth, registrations: registrations, settings: settings, cfg: cfg}
 }
 
 func (h *AuthHandler) LoginForm(w http.ResponseWriter, r *http.Request) {
@@ -123,6 +124,11 @@ func (h *AuthHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		}
 		h.renderRegisterError(w, r, u, errorKey)
 		return
+	}
+
+	// Link anonymous registrations with same email to this account
+	if user.Email != "" {
+		h.registrations.LinkAnonymousByEmail(user.Email, user.ID)
 	}
 
 	// Send verification email if SMTP configured and user has email

@@ -115,6 +115,17 @@ func (s *RegistrationStore) DeleteByUserAndEvent(userID, eventID string) error {
 	return nil
 }
 
+func (s *RegistrationStore) LinkAnonymousByEmail(email, userID string) (int64, error) {
+	result, err := s.db.Exec(
+		"UPDATE registrations SET user_id = ? WHERE user_id IS NULL AND email = ?",
+		userID, email,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("link anonymous registrations: %w", err)
+	}
+	return result.RowsAffected()
+}
+
 func (s *RegistrationStore) ExistsByUserAndEvent(userID, eventID string) (bool, error) {
 	var count int
 	err := s.db.QueryRow("SELECT COUNT(*) FROM registrations WHERE user_id = ? AND event_id = ?", userID, eventID).Scan(&count)

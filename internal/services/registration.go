@@ -142,6 +142,10 @@ func (s *RegistrationService) IsUserRegistered(userID, eventID string) bool {
 	return err == nil && exists
 }
 
+func (s *RegistrationService) LinkAnonymousByEmail(email, userID string) (int64, error) {
+	return s.registrations.LinkAnonymousByEmail(email, userID)
+}
+
 func (s *RegistrationService) AnonymizeByUser(userID string) error {
 	return s.registrations.AnonymizeByUser(userID)
 }

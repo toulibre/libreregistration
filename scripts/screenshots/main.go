@@ -237,7 +237,7 @@ func startServer(cfg *config.Config, auth *services.AuthService, events *service
 		MaxAge:   86400 * 7,
 	}
 
-	authHandler := handlers.NewAuthHandler(auth, settings, cfg)
+	authHandler := handlers.NewAuthHandler(auth, regs, settings, cfg)
 	eventHandler := handlers.NewEventHandler(events, regs, auth, settings, uploadDir, cfg.BaseURL)
 	registrationHandler := handlers.NewRegistrationHandler(regs, events, auth, settings)
 	adminHandler := handlers.NewAdminHandler(events, regs, auth, settings, uploadDir)
