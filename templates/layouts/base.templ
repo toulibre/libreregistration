@@ -67,11 +67,10 @@ templ PublicShellOG(title string, siteName string, accentColor string, og *OGMet
 				<a href="/" class="text-xl font-bold text-accent hover:text-accent-dark">{ siteName }</a>
 				<div class="flex items-center gap-3 text-sm">
 					if IsLoggedIn(ctx) {
-						if IsUserRole(ctx) {
-							<a href="/account" class="text-accent hover:text-accent-dark">{ CtxDisplayName(ctx) }</a>
-						} else {
-							<a href="/admin/" class="text-accent hover:text-accent-dark">{ CtxDisplayName(ctx) }</a>
+						if !IsUserRole(ctx) {
+							<a href="/admin/" class="text-accent hover:text-accent-dark">{ i18n.T(ctx, "footer.admin") }</a>
 						}
+						<a href="/account" class="text-accent hover:text-accent-dark">{ CtxDisplayName(ctx) }</a>
 						<form method="POST" action="/logout" class="inline">
 							@templ.Raw(CtxCSRFField(ctx))
 							<button type="submit" class="text-gray-500 hover:text-gray-700">{ i18n.T(ctx, "nav.logout") }</button>
@@ -110,7 +109,7 @@ templ AdminShell(title string, siteName string, accentColor string, username str
 	@Base(title, siteName, accentColor, nil) {
 		<div class="flex min-h-screen">
 			<aside class="w-64 bg-gray-900 text-gray-100 p-4 space-y-2">
-				<a href="/admin/" class="flex items-center gap-2 text-lg font-bold mb-6 text-white">
+				<a href="/" class="flex items-center gap-2 text-lg font-bold mb-6 text-white" title={ i18n.T(ctx, "nav.back_to_site") }>
 					@Logo("24")
 					{ siteName }
 				</a>
@@ -120,6 +119,7 @@ templ AdminShell(title string, siteName string, accentColor string, username str
 				@adminNavLink("/admin/settings", i18n.T(ctx, "nav.settings"), NavIsActive(ctx, "/admin/settings"))
 				<div class="mt-auto pt-8 border-t border-gray-700 text-sm text-gray-400">
 					<p class="mb-2">{ username }</p>
+					<a href="/account" class="text-gray-400 hover:text-white underline">{ i18n.T(ctx, "account.title") }</a>
 					<a href="/admin/password" class="text-gray-400 hover:text-white underline">{ i18n.T(ctx, "nav.password") }</a>
 					<form method="POST" action="/logout" class="mt-1">
 						@templ.Raw(CtxCSRFField(ctx))
