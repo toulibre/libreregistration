@@ -3,6 +3,7 @@ package layouts
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/toulibre/libreregistration/internal/i18n"
 	"github.com/toulibre/libreregistration/internal/models"
@@ -45,7 +46,11 @@ templ PageSizeSelector(currentSize int, baseURL string) {
 }
 
 func paginationURL(baseURL string, page, pageSize int) string {
-	return fmt.Sprintf("%s?page=%d&per_page=%d", baseURL, page, pageSize)
+	sep := "?"
+	if strings.Contains(baseURL, "?") {
+		sep = "&"
+	}
+	return fmt.Sprintf("%s%spage=%d&per_page=%d", baseURL, sep, page, pageSize)
 }
 
 func min(a, b int) int {

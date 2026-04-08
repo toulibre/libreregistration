@@ -38,13 +38,23 @@ func NewEventHandler(events *services.EventService, registrations *services.Regi
 
 func (h *EventHandler) Home(w http.ResponseWriter, r *http.Request) {
 	page, pageSize := parsePagination(r, 25)
-	events, pag, err := h.events.ListUpcomingPaged(page, pageSize)
+	showPast := r.URL.Query().Get("show") == "past"
+
+	var events []models.Event
+	var pag models.Pagination
+	var err error
+
+	if showPast {
+		events, pag, err = h.events.ListPastPaged(page, pageSize)
+	} else {
+		events, pag, err = h.events.ListUpcomingPaged(page, pageSize)
+	}
 	if err != nil {
 		http.Error(w, i18n.T(r.Context(), "error.internal"), http.StatusInternalServerError)
 		return
 	}
 	siteName, accentColor := h.settings.GetSiteSettings()
-	public.Home(events, pag, siteName, accentColor).Render(r.Context(), w)
+	public.Home(events, pag, showPast, siteName, accentColor).Render(r.Context(), w)
 }
 
 func (h *EventHandler) Show(w http.ResponseWriter, r *http.Request) {

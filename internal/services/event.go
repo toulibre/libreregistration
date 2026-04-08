@@ -96,6 +96,16 @@ func (s *EventService) ListUpcomingPaged(page, pageSize int) ([]models.Event, mo
 	return events, pag, err
 }
 
+func (s *EventService) ListPastPaged(page, pageSize int) ([]models.Event, models.Pagination, error) {
+	total, err := s.events.CountPast()
+	if err != nil {
+		return nil, models.Pagination{}, err
+	}
+	pag := models.NewPagination(page, pageSize, total)
+	events, err := s.events.ListPastPaged(pag.PageSize, pag.Offset())
+	return events, pag, err
+}
+
 func (s *EventService) ListAll() ([]models.Event, error) {
 	return s.events.ListAll()
 }

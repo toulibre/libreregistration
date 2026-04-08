@@ -9,8 +9,11 @@
   "footer.admin": "Admin",
 
   "home.title": "Home",
-  "home.heading": "Upcoming events",
+  "home.heading": "Events",
+  "home.tab.upcoming": "Upcoming",
+  "home.tab.past": "Past",
   "home.no_events": "No upcoming events at this time.",
+  "home.no_past_events": "No past events.",
 
   "event.register_heading": "Register",
   "event.label.name": "Name or nickname",

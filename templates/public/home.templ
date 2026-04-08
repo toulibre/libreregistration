@@ -6,11 +6,27 @@ import (
 	"github.com/toulibre/libreregistration/templates/layouts"
 )
 
-templ Home(events []models.Event, pag models.Pagination, siteName string, accentColor string) {
+templ Home(events []models.Event, pag models.Pagination, showPast bool, siteName string, accentColor string) {
 	@layouts.PublicShell(i18n.T(ctx, "home.title"), siteName, accentColor) {
-		<h1 class="text-3xl font-bold mb-8">{ i18n.T(ctx, "home.heading") }</h1>
+		<h1 class="text-3xl font-bold mb-6">{ i18n.T(ctx, "home.heading") }</h1>
+		<div class="flex gap-4 mb-6 border-b border-gray-200">
+			if !showPast {
+				<span class="pb-2 border-b-2 border-accent text-accent font-medium text-sm">{ i18n.T(ctx, "home.tab.upcoming") }</span>
+			} else {
+				<a href="/" class="pb-2 text-sm text-gray-500 hover:text-gray-700">{ i18n.T(ctx, "home.tab.upcoming") }</a>
+			}
+			if showPast {
+				<span class="pb-2 border-b-2 border-accent text-accent font-medium text-sm">{ i18n.T(ctx, "home.tab.past") }</span>
+			} else {
+				<a href="/?show=past" class="pb-2 text-sm text-gray-500 hover:text-gray-700">{ i18n.T(ctx, "home.tab.past") }</a>
+			}
+		</div>
 		if len(events) == 0 {
-			<p class="text-gray-500">{ i18n.T(ctx, "home.no_events") }</p>
+			if showPast {
+				<p class="text-gray-500">{ i18n.T(ctx, "home.no_past_events") }</p>
+			} else {
+				<p class="text-gray-500">{ i18n.T(ctx, "home.no_events") }</p>
+			}
 		} else {
 			<div class="space-y-4">
 				for _, event := range events {
@@ -26,9 +42,16 @@ templ Home(events []models.Event, pag models.Pagination, siteName string, accent
 				}
 			</div>
 			<div class="flex justify-between items-center mt-6">
-				@layouts.PageSizeSelector(pag.PageSize, "/")
-				@layouts.Pagination(pag, "/")
+				@layouts.PageSizeSelector(pag.PageSize, homeBaseURL(showPast))
+				@layouts.Pagination(pag, homeBaseURL(showPast))
 			</div>
 		}
 	}
+}
+
+func homeBaseURL(showPast bool) string {
+	if showPast {
+		return "/?show=past"
+	}
+	return "/"
 }

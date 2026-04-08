@@ -86,6 +86,16 @@ func (s *EventStore) ListUpcomingPaged(limit, offset int) ([]models.Event, error
 	return s.listEvents(fmt.Sprintf("WHERE e.event_date >= ? AND e.registration_open = true ORDER BY e.event_date ASC LIMIT %d OFFSET %d", limit, offset), time.Now())
 }
 
+func (s *EventStore) ListPastPaged(limit, offset int) ([]models.Event, error) {
+	return s.listEvents(fmt.Sprintf("WHERE e.event_date < ? ORDER BY e.event_date DESC LIMIT %d OFFSET %d", limit, offset), time.Now())
+}
+
+func (s *EventStore) CountPast() (int, error) {
+	var count int
+	err := s.db.QueryRow("SELECT COUNT(*) FROM events WHERE event_date < ?", time.Now()).Scan(&count)
+	return count, err
+}
+
 func (s *EventStore) ListAll() ([]models.Event, error) {
 	return s.listEvents("ORDER BY e.event_date DESC")
 }
