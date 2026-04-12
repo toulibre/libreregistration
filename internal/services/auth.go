@@ -185,8 +185,57 @@ func (s *AuthService) GenerateVerifyToken(userID string) (string, error) {
 	return token, nil
 }
 
+func (s *AuthService) RequestPasswordReset(email string) (token string, user *models.User, err error) {
+	user, err = s.users.GetByEmail(email)
+	if err != nil {
+		return "", nil, fmt.Errorf("request reset: %w", err)
+	}
+	if user == nil {
+		return "", nil, nil // no user with this email, don't reveal
+	}
+
+	token = uuid.New().String()
+	expires := time.Now().Add(1 * time.Hour)
+	if err := s.users.SetResetToken(user.ID, token, expires); err != nil {
+		return "", nil, err
+	}
+	return token, user, nil
+}
+
+func (s *AuthService) ResetPassword(token, newPassword string) (*models.User, error) {
+	user, err := s.users.GetByResetToken(token)
+	if err != nil {
+		return nil, fmt.Errorf("reset password: %w", err)
+	}
+	if user == nil {
+		return nil, ErrInvalidResetToken
+	}
+	if user.PasswordResetExpires == nil || time.Now().After(*user.PasswordResetExpires) {
+		return nil, ErrResetTokenExpired
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("hash password: %w", err)
+	}
+
+	if err := s.users.UpdatePassword(user.ID, string(hash)); err != nil {
+		return nil, err
+	}
+	s.users.ClearResetToken(user.ID)
+
+	// Also verify email since they proved access
+	if !user.EmailVerified {
+		s.users.VerifyEmail(user.ID)
+	}
+
+	return user, nil
+}
+
 var ErrInvalidCurrentPassword = fmt.Errorf("invalid current password")
 var ErrUsernameTaken = fmt.Errorf("username already taken")
+var ErrInvalidResetToken = fmt.Errorf("invalid reset token")
+var ErrResetTokenExpired = fmt.Errorf("reset token expired")
 
 func (s *AuthService) Register(username, name, email, password string) (*models.User, error) {
 	existing, err := s.users.GetByUsername(username)

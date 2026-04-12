@@ -126,10 +126,14 @@ func run() error {
 	r.Post("/event/{slug}/cancel", registrationHandler.CancelByUser)
 	r.Get("/cancel/{token}", registrationHandler.Cancel)
 
-	// Self-registration and email verification
+	// Self-registration, email verification, password reset
 	r.Get("/register", authHandler.RegisterForm)
 	r.Post("/register", authHandler.RegisterUser)
 	r.Get("/verify-email/{token}", authHandler.VerifyEmail)
+	r.Get("/forgot-password", authHandler.ForgotPasswordForm)
+	r.Post("/forgot-password", authHandler.ForgotPassword)
+	r.Get("/reset-password/{token}", authHandler.ResetPasswordForm)
+	r.Post("/reset-password", authHandler.ResetPassword)
 
 	// Logout (any authenticated user)
 	r.Group(func(r chi.Router) {

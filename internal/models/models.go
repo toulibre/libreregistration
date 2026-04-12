@@ -11,17 +11,19 @@ const (
 )
 
 type User struct {
-	ID               string
-	Username         string
-	Name             string
-	Email            string
-	AvatarPath       string
-	PasswordHash     string
-	Role             Role
-	EmailVerified    bool
-	EmailVerifyToken string
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
+	ID                   string
+	Username             string
+	Name                 string
+	Email                string
+	AvatarPath           string
+	PasswordHash         string
+	Role                 Role
+	EmailVerified        bool
+	EmailVerifyToken     string
+	PasswordResetToken   string
+	PasswordResetExpires *time.Time
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
 }
 
 // DisplayName returns the name if set, otherwise the username.

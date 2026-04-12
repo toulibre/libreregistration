@@ -28,6 +28,15 @@ func SendOrganizerNotification(cfg *config.Config, ctx context.Context, to, atte
 	}
 }
 
+func SendPasswordReset(cfg *config.Config, ctx context.Context, to, resetURL string) {
+	subject := i18n.T(ctx, "mail.reset_subject")
+	body := i18n.Tf(ctx, "mail.reset_body_fmt", resetURL, cfg.SMTPFrom)
+
+	if err := send(cfg, to, subject, body); err != nil {
+		log.Printf("Failed to send password reset email to %s: %v", to, err)
+	}
+}
+
 func SendEmailVerification(cfg *config.Config, ctx context.Context, to, verifyURL string) {
 	subject := i18n.T(ctx, "mail.verify_subject")
 	body := i18n.Tf(ctx, "mail.verify_body_fmt", verifyURL, cfg.SMTPFrom)

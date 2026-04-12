@@ -16,11 +16,11 @@ func NewUserStore(db *DB) *UserStore {
 	return &UserStore{db: db}
 }
 
-const userColumns = "id, username, name, email, avatar_path, password_hash, role, email_verified, email_verify_token, created_at, updated_at"
+const userColumns = "id, username, name, email, avatar_path, password_hash, role, email_verified, email_verify_token, password_reset_token, password_reset_expires, created_at, updated_at"
 
 func scanUser(row interface{ Scan(...interface{}) error }) (*models.User, error) {
 	var u models.User
-	err := row.Scan(&u.ID, &u.Username, &u.Name, &u.Email, &u.AvatarPath, &u.PasswordHash, &u.Role, &u.EmailVerified, &u.EmailVerifyToken, &u.CreatedAt, &u.UpdatedAt)
+	err := row.Scan(&u.ID, &u.Username, &u.Name, &u.Email, &u.AvatarPath, &u.PasswordHash, &u.Role, &u.EmailVerified, &u.EmailVerifyToken, &u.PasswordResetToken, &u.PasswordResetExpires, &u.CreatedAt, &u.UpdatedAt)
 	return &u, err
 }
 
@@ -52,8 +52,8 @@ func (s *UserStore) GetByID(id string) (*models.User, error) {
 
 func (s *UserStore) Create(u *models.User) error {
 	_, err := s.db.Exec(
-		"INSERT INTO users (id, username, name, email, avatar_path, password_hash, role, email_verified, email_verify_token, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-		u.ID, u.Username, u.Name, u.Email, u.AvatarPath, u.PasswordHash, u.Role, u.EmailVerified, u.EmailVerifyToken, u.CreatedAt, u.UpdatedAt,
+		"INSERT INTO users (id, username, name, email, avatar_path, password_hash, role, email_verified, email_verify_token, password_reset_token, password_reset_expires, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		u.ID, u.Username, u.Name, u.Email, u.AvatarPath, u.PasswordHash, u.Role, u.EmailVerified, u.EmailVerifyToken, u.PasswordResetToken, u.PasswordResetExpires, u.CreatedAt, u.UpdatedAt,
 	)
 	if err != nil {
 		return fmt.Errorf("create user: %w", err)
@@ -135,6 +135,54 @@ func (s *UserStore) SetVerifyToken(id, token string) error {
 	)
 	if err != nil {
 		return fmt.Errorf("set verify token: %w", err)
+	}
+	return nil
+}
+
+func (s *UserStore) GetByEmail(email string) (*models.User, error) {
+	u, err := scanUser(s.db.QueryRow(
+		"SELECT "+userColumns+" FROM users WHERE email = ?", email,
+	))
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get user by email: %w", err)
+	}
+	return u, nil
+}
+
+func (s *UserStore) SetResetToken(id, token string, expires time.Time) error {
+	_, err := s.db.Exec(
+		"UPDATE users SET password_reset_token = ?, password_reset_expires = ?, updated_at = ? WHERE id = ?",
+		token, expires, time.Now(), id,
+	)
+	if err != nil {
+		return fmt.Errorf("set reset token: %w", err)
+	}
+	return nil
+}
+
+func (s *UserStore) GetByResetToken(token string) (*models.User, error) {
+	u, err := scanUser(s.db.QueryRow(
+		"SELECT "+userColumns+" FROM users WHERE password_reset_token = ?", token,
+	))
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get user by reset token: %w", err)
+	}
+	return u, nil
+}
+
+func (s *UserStore) ClearResetToken(id string) error {
+	_, err := s.db.Exec(
+		"UPDATE users SET password_reset_token = '', password_reset_expires = NULL, updated_at = ? WHERE id = ?",
+		time.Now(), id,
+	)
+	if err != nil {
+		return fmt.Errorf("clear reset token: %w", err)
 	}
 	return nil
 }

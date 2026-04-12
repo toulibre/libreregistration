@@ -176,6 +176,77 @@ func (h *AuthHandler) ResendVerification(w http.ResponseWriter, r *http.Request)
 	http.Redirect(w, r, "/account", http.StatusFound)
 }
 
+func (h *AuthHandler) ForgotPasswordForm(w http.ResponseWriter, r *http.Request) {
+	siteName, accentColor := h.settings.GetSiteSettings()
+	csrfField := middleware.CSRFTemplateField(r)
+	public.ForgotPasswordForm(siteName, accentColor, csrfField, "", "").Render(r.Context(), w)
+}
+
+func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	email := r.FormValue("email")
+	siteName, accentColor := h.settings.GetSiteSettings()
+	csrfField := middleware.CSRFTemplateField(r)
+
+	if email == "" {
+		public.ForgotPasswordForm(siteName, accentColor, csrfField, i18n.T(r.Context(), "forgot_password.error.email_required"), "").Render(r.Context(), w)
+		return
+	}
+
+	token, user, err := h.auth.RequestPasswordReset(email)
+	if err != nil {
+		public.ForgotPasswordForm(siteName, accentColor, csrfField, i18n.T(r.Context(), "error.internal"), "").Render(r.Context(), w)
+		return
+	}
+
+	// Send email if user exists and SMTP configured — but always show success to avoid user enumeration
+	if user != nil && token != "" && h.cfg.SMTPHost != "" {
+		resetURL := fmt.Sprintf("%s/reset-password/%s", h.cfg.BaseURL, token)
+		go mail.SendPasswordReset(h.cfg, r.Context(), user.Email, resetURL)
+	}
+
+	public.ForgotPasswordForm(siteName, accentColor, csrfField, "", i18n.T(r.Context(), "forgot_password.success")).Render(r.Context(), w)
+}
+
+func (h *AuthHandler) ResetPasswordForm(w http.ResponseWriter, r *http.Request) {
+	token := chi.URLParam(r, "token")
+	siteName, accentColor := h.settings.GetSiteSettings()
+	csrfField := middleware.CSRFTemplateField(r)
+	public.ResetPasswordForm(siteName, accentColor, csrfField, token, "").Render(r.Context(), w)
+}
+
+func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	token := r.FormValue("token")
+	password := r.FormValue("password")
+	confirmPassword := r.FormValue("confirm_password")
+
+	siteName, accentColor := h.settings.GetSiteSettings()
+	csrfField := middleware.CSRFTemplateField(r)
+
+	if password == "" {
+		public.ResetPasswordForm(siteName, accentColor, csrfField, token, i18n.T(r.Context(), "password.error.fields_required")).Render(r.Context(), w)
+		return
+	}
+
+	if password != confirmPassword {
+		public.ResetPasswordForm(siteName, accentColor, csrfField, token, i18n.T(r.Context(), "password.error.mismatch")).Render(r.Context(), w)
+		return
+	}
+
+	user, err := h.auth.ResetPassword(token, password)
+	if err != nil {
+		errorKey := "reset_password.error.invalid_token"
+		if errors.Is(err, services.ErrResetTokenExpired) {
+			errorKey = "reset_password.error.expired"
+		}
+		public.ResetPasswordForm(siteName, accentColor, csrfField, token, i18n.T(r.Context(), errorKey)).Render(r.Context(), w)
+		return
+	}
+
+	h.setSession(w, r, user)
+	middleware.SetFlash(w, r, "success", i18n.T(r.Context(), "flash.password_reset"))
+	http.Redirect(w, r, "/account", http.StatusFound)
+}
+
 func (h *AuthHandler) setSession(w http.ResponseWriter, r *http.Request, user *models.User) {
 	session := middleware.GetSession(r)
 	session.Values["user_id"] = user.ID
