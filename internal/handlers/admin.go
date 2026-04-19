@@ -341,7 +341,9 @@ func (h *AdminHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		if len(values) > 0 {
-			settings[key] = values[0]
+			// For checkbox fields with a hidden "false" + checkbox "true",
+			// take the last value (browser sends hidden first, checkbox second)
+			settings[key] = values[len(values)-1]
 		}
 	}
 
