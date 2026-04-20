@@ -17,6 +17,73 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for changelog
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Find the previous tag (if any)
+          PREV_TAG=$(git tag --sort=-creatordate | head -1)
+
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..HEAD"
+            echo "Generating changelog from ${PREV_TAG} to HEAD"
+          else
+            RANGE=""
+            echo "Generating changelog from all commits (first release)"
+          fi
+
+          # Collect commits by category
+          FEATURES=""
+          FIXES=""
+          OTHER=""
+
+          while IFS= read -r line; do
+            HASH=$(echo "$line" | cut -d' ' -f1)
+            MSG=$(echo "$line" | cut -d' ' -f2-)
+
+            case "$MSG" in
+              feat:*|feat\(*) FEATURES="${FEATURES}
+          - ${MSG#feat: }" ;;
+              fix:*|fix\(*)   FIXES="${FIXES}
+          - ${MSG#fix: }" ;;
+              build:*|doc:*|docs:*|chore:*) OTHER="${OTHER}
+          - ${MSG}" ;;
+              *)              OTHER="${OTHER}
+          - ${MSG}" ;;
+            esac
+          done < <(git log ${RANGE} --oneline --no-merges)
+
+          # Build changelog body
+          BODY=""
+          if [ -n "$FEATURES" ]; then
+            BODY="${BODY}## Features
+          ${FEATURES}
+
+          "
+          fi
+          if [ -n "$FIXES" ]; then
+            BODY="${BODY}## Fixes
+          ${FIXES}
+
+          "
+          fi
+          if [ -n "$OTHER" ]; then
+            BODY="${BODY}## Other
+          ${OTHER}
+
+          "
+          fi
+
+          if [ -n "$PREV_TAG" ]; then
+            BODY="${BODY}**Full changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${{ steps.version.outputs.version }}"
+          fi
+
+          # Write to file (multiline output)
+          echo "$BODY" > /tmp/changelog.md
+          echo "Generated changelog:"
+          cat /tmp/changelog.md
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -52,6 +119,7 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.version }}
           name: ${{ steps.version.outputs.version }}
+          body_path: /tmp/changelog.md
           files: |
             dist/libreregistration-linux-amd64.tar.gz
             dist/libreregistration-linux-arm64.tar.gz
