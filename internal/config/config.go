@@ -19,6 +19,7 @@ type Config struct {
 	SMTPUser       string
 	SMTPPassword   string
 	SMTPFrom       string
+	SMTPInsecure   bool
 	UploadDir      string
 }
 
@@ -38,6 +39,7 @@ func Load() *Config {
 		SMTPUser:      envOr("SMTP_USER", ""),
 		SMTPPassword:  envOr("SMTP_PASSWORD", ""),
 		SMTPFrom:      envOr("SMTP_FROM", ""),
+		SMTPInsecure:  envOr("SMTP_INSECURE", "") == "true",
 		UploadDir:     envOr("UPLOAD_DIR", "uploads"),
 	}
 }
