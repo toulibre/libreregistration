@@ -6,15 +6,31 @@ import (
 	"fmt"
 	"log"
 	"net"
+	netmail "net/mail"
 	"net/smtp"
 
 	"github.com/toulibre/libreregistration/internal/config"
 	"github.com/toulibre/libreregistration/internal/i18n"
 )
 
+func signatureName(cfg *config.Config) string {
+	if cfg.SMTPFromName != "" {
+		return cfg.SMTPFromName
+	}
+	return cfg.SMTPFrom
+}
+
+func fromHeader(cfg *config.Config) string {
+	if cfg.SMTPFromName == "" {
+		return cfg.SMTPFrom
+	}
+	a := netmail.Address{Name: cfg.SMTPFromName, Address: cfg.SMTPFrom}
+	return a.String()
+}
+
 func SendConfirmation(cfg *config.Config, ctx context.Context, to, eventTitle, cancelURL string) {
 	subject := i18n.Tf(ctx, "mail.confirmation_subject_fmt", eventTitle)
-	body := i18n.Tf(ctx, "mail.confirmation_body_fmt", eventTitle, cancelURL, cfg.SMTPFrom)
+	body := i18n.Tf(ctx, "mail.confirmation_body_fmt", eventTitle, cancelURL, signatureName(cfg))
 
 	if err := send(cfg, to, subject, body); err != nil {
 		log.Printf("Failed to send email to %s: %v", to, err)
@@ -23,7 +39,7 @@ func SendConfirmation(cfg *config.Config, ctx context.Context, to, eventTitle, c
 
 func SendOrganizerNotification(cfg *config.Config, ctx context.Context, to, attendeeName, attendeeEmail, eventTitle string) {
 	subject := i18n.Tf(ctx, "mail.organizer_notification_subject_fmt", eventTitle)
-	body := i18n.Tf(ctx, "mail.organizer_notification_body_fmt", eventTitle, attendeeName, attendeeEmail, cfg.SMTPFrom)
+	body := i18n.Tf(ctx, "mail.organizer_notification_body_fmt", eventTitle, attendeeName, attendeeEmail, signatureName(cfg))
 
 	if err := send(cfg, to, subject, body); err != nil {
 		log.Printf("Failed to send organizer notification to %s: %v", to, err)
@@ -32,7 +48,7 @@ func SendOrganizerNotification(cfg *config.Config, ctx context.Context, to, atte
 
 func SendPasswordReset(cfg *config.Config, ctx context.Context, to, resetURL string) {
 	subject := i18n.T(ctx, "mail.reset_subject")
-	body := i18n.Tf(ctx, "mail.reset_body_fmt", resetURL, cfg.SMTPFrom)
+	body := i18n.Tf(ctx, "mail.reset_body_fmt", resetURL, signatureName(cfg))
 
 	if err := send(cfg, to, subject, body); err != nil {
 		log.Printf("Failed to send password reset email to %s: %v", to, err)
@@ -41,7 +57,7 @@ func SendPasswordReset(cfg *config.Config, ctx context.Context, to, resetURL str
 
 func SendEmailVerification(cfg *config.Config, ctx context.Context, to, verifyURL string) {
 	subject := i18n.T(ctx, "mail.verify_subject")
-	body := i18n.Tf(ctx, "mail.verify_body_fmt", verifyURL, cfg.SMTPFrom)
+	body := i18n.Tf(ctx, "mail.verify_body_fmt", verifyURL, signatureName(cfg))
 
 	if err := send(cfg, to, subject, body); err != nil {
 		log.Printf("Failed to send verification email to %s: %v", to, err)
@@ -51,7 +67,7 @@ func SendEmailVerification(cfg *config.Config, ctx context.Context, to, verifyUR
 func send(cfg *config.Config, to, subject, body string) error {
 	addr := fmt.Sprintf("%s:%s", cfg.SMTPHost, cfg.SMTPPort)
 	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n%s",
-		cfg.SMTPFrom, to, subject, body)
+		fromHeader(cfg), to, subject, body)
 
 	if !cfg.SMTPInsecure {
 		var auth smtp.Auth
