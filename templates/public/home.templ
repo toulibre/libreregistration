@@ -8,7 +8,13 @@ import (
 
 templ Home(events []models.Event, pag models.Pagination, showPast bool, siteName string, accentColor string) {
 	@layouts.PublicShell(i18n.T(ctx, "home.title"), siteName, accentColor) {
-		<h1 class="text-3xl font-bold mb-6">{ i18n.T(ctx, "home.heading") }</h1>
+		<div class="flex justify-between items-center mb-6">
+			<h1 class="text-3xl font-bold">{ i18n.T(ctx, "home.heading") }</h1>
+			<a href={ templ.SafeURL(icalFeedURL(showPast)) } class="inline-flex items-center gap-1 text-sm text-accent hover:text-accent-dark">
+				<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+				{ i18n.T(ctx, "home.subscribe_ical") }
+			</a>
+		</div>
 		<div class="flex gap-4 mb-6 border-b border-gray-200">
 			if !showPast {
 				<span class="pb-2 border-b-2 border-accent text-accent font-medium text-sm">{ i18n.T(ctx, "home.tab.upcoming") }</span>
@@ -54,4 +60,11 @@ func homeBaseURL(showPast bool) string {
 		return "/?show=past"
 	}
 	return "/"
+}
+
+func icalFeedURL(showPast bool) string {
+	if showPast {
+		return "/events/past.ics"
+	}
+	return "/events.ics"
 }

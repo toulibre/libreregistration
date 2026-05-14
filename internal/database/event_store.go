@@ -90,6 +90,16 @@ func (s *EventStore) ListPastPaged(limit, offset int) ([]models.Event, error) {
 	return s.listEvents(fmt.Sprintf("WHERE e.event_date < ? ORDER BY e.event_date DESC LIMIT %d OFFSET %d", limit, offset), time.Now())
 }
 
+// ListPastSince returns past events with event_date in [from, now). When from
+// is the zero time, no lower bound is applied.
+func (s *EventStore) ListPastSince(from time.Time) ([]models.Event, error) {
+	now := time.Now()
+	if from.IsZero() {
+		return s.listEvents("WHERE e.event_date < ? ORDER BY e.event_date DESC", now)
+	}
+	return s.listEvents("WHERE e.event_date < ? AND e.event_date >= ? ORDER BY e.event_date DESC", now, from)
+}
+
 func (s *EventStore) CountPast() (int, error) {
 	var count int
 	err := s.db.QueryRow("SELECT COUNT(*) FROM events WHERE event_date < ?", time.Now()).Scan(&count)

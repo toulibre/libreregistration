@@ -7,6 +7,7 @@
   "nav.logout": "Log out",
   "footer.powered_by": "Powered by",
   "footer.admin": "Admin",
+  "footer.ical": "Calendar feed",
 
   "home.title": "Home",
   "home.heading": "Events",
@@ -14,6 +15,10 @@
   "home.tab.past": "Past",
   "home.no_events": "No upcoming events at this time.",
   "home.no_past_events": "No past events.",
+  "home.subscribe_ical": "Subscribe to calendar",
+
+  "ical.upcoming.title": "Upcoming events",
+  "ical.past.title": "Past events",
 
   "event.register_heading": "Register",
   "event.label.name": "Name or nickname",

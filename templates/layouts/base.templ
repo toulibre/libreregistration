@@ -19,6 +19,8 @@ templ Base(title string, siteName string, accentColor string, og *OGMeta) {
 			<title>{ title } — { siteName }</title>
 			<link rel="icon" href="/static/logo.svg" type="image/svg+xml"/>
 			<link rel="stylesheet" href="/static/css/output.css"/>
+			<link rel="alternate" type="text/calendar" href="/events.ics" title={ i18n.T(ctx, "ical.upcoming.title") }/>
+			<link rel="alternate" type="text/calendar" href="/events/past.ics" title={ i18n.T(ctx, "ical.past.title") }/>
 			if og != nil {
 				<meta property="og:title" content={ og.Title }/>
 				<meta property="og:site_name" content={ siteName }/>
@@ -90,7 +92,7 @@ templ PublicShellOG(title string, siteName string, accentColor string, og *OGMet
 		</main>
 		@FlashAutoDismiss()
 		<footer class="mt-16 border-t border-gray-200 py-6 text-center text-sm text-gray-500">
-			<p>{ i18n.T(ctx, "footer.powered_by") } <a href="https://github.com/toulibre/libreregistration" class="underline">LibreRegistration</a> · <a href="/admin/" class="hover:text-gray-700">{ i18n.T(ctx, "footer.admin") }</a></p>
+			<p>{ i18n.T(ctx, "footer.powered_by") } <a href="https://github.com/toulibre/libreregistration" class="underline">LibreRegistration</a> · <a href="/admin/" class="hover:text-gray-700">{ i18n.T(ctx, "footer.admin") }</a> · <a href="/events.ics" class="hover:text-gray-700">{ i18n.T(ctx, "footer.ical") }</a></p>
 		</footer>
 	}
 }

@@ -13,6 +13,7 @@ import (
 
 	"github.com/toulibre/libreregistration/internal/captcha"
 	"github.com/toulibre/libreregistration/internal/i18n"
+	"github.com/toulibre/libreregistration/internal/ical"
 	"github.com/toulibre/libreregistration/internal/middleware"
 	"github.com/toulibre/libreregistration/internal/models"
 	"github.com/toulibre/libreregistration/internal/services"
@@ -122,41 +123,46 @@ func (h *EventHandler) ICal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uid := event.ID + "@libreregistration"
-	dtStart := event.EventDate.UTC().Format("20060102T150405Z")
-	dtEnd := event.EventDate.Add(2 * time.Hour).UTC().Format("20060102T150405Z")
-	now := time.Now().UTC().Format("20060102T150405Z")
-
-	var b strings.Builder
-	b.WriteString("BEGIN:VCALENDAR\r\n")
-	b.WriteString("VERSION:2.0\r\n")
-	b.WriteString("PRODID:-//LibreRegistration//EN\r\n")
-	b.WriteString("BEGIN:VEVENT\r\n")
-	b.WriteString("UID:" + uid + "\r\n")
-	b.WriteString("DTSTAMP:" + now + "\r\n")
-	b.WriteString("DTSTART:" + dtStart + "\r\n")
-	b.WriteString("DTEND:" + dtEnd + "\r\n")
-	b.WriteString("SUMMARY:" + icalEscape(event.Title) + "\r\n")
-	if event.Location != "" {
-		b.WriteString("LOCATION:" + icalEscape(event.Location) + "\r\n")
-	}
-	if event.Description != "" {
-		b.WriteString("DESCRIPTION:" + icalEscape(event.Description) + "\r\n")
-	}
-	b.WriteString("END:VEVENT\r\n")
-	b.WriteString("END:VCALENDAR\r\n")
-
 	w.Header().Set("Content-Type", "text/calendar; charset=utf-8")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.ics"`, event.Slug))
-	w.Write([]byte(b.String()))
+	_ = ical.RenderCalendar(w, []models.Event{*event}, event.Title)
 }
 
-func icalEscape(s string) string {
-	s = strings.ReplaceAll(s, "\\", "\\\\")
-	s = strings.ReplaceAll(s, ";", "\\;")
-	s = strings.ReplaceAll(s, ",", "\\,")
-	s = strings.ReplaceAll(s, "\n", "\\n")
-	return s
+func (h *EventHandler) ICalUpcoming(w http.ResponseWriter, r *http.Request) {
+	events, err := h.events.ListUpcoming()
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	siteName, _ := h.settings.GetSiteSettings()
+	w.Header().Set("Content-Type", "text/calendar; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="events.ics"`)
+	_ = ical.RenderCalendar(w, events, siteName)
+}
+
+func (h *EventHandler) ICalPast(w http.ResponseWriter, r *http.Request) {
+	months := 12
+	if m := r.URL.Query().Get("months"); m != "" {
+		if m == "all" {
+			months = 0
+		} else if n, err := strconv.Atoi(m); err == nil && n > 0 {
+			months = n
+		}
+	}
+	var from time.Time
+	if months > 0 {
+		from = time.Now().AddDate(0, -months, 0)
+	}
+
+	events, err := h.events.ListPastSince(from)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	siteName, _ := h.settings.GetSiteSettings()
+	w.Header().Set("Content-Type", "text/calendar; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="events-past.ics"`)
+	_ = ical.RenderCalendar(w, events, siteName)
 }
 
 // Admin routes

@@ -7,6 +7,7 @@
   "nav.logout": "D\u00e9connexion",
   "footer.powered_by": "Propuls\u00e9 par",
   "footer.admin": "Administration",
+  "footer.ical": "Flux calendrier",
 
   "home.title": "Accueil",
   "home.heading": "\u00c9v\u00e9nements",
@@ -14,6 +15,10 @@
   "home.tab.past": "Pass\u00e9s",
   "home.no_events": "Aucun \u00e9v\u00e9nement \u00e0 venir pour le moment.",
   "home.no_past_events": "Aucun \u00e9v\u00e9nement pass\u00e9.",
+  "home.subscribe_ical": "S'abonner au calendrier",
+
+  "ical.upcoming.title": "\u00c9v\u00e9nements \u00e0 venir",
+  "ical.past.title": "\u00c9v\u00e9nements pass\u00e9s",
 
   "event.register_heading": "S'inscrire",
   "event.label.name": "Nom ou pseudonyme",
