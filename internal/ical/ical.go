@@ -12,12 +12,18 @@ import (
 const (
 	prodID    = "-//LibreRegistration//EN"
 	timeStamp = "20060102T150405Z"
+	// category exposed on every VEVENT. LibreRegistration only manages
+	// registration-based QJeLT events, so a single fixed category is accurate
+	// and lets consumers (e.g. the public website) map events to a type.
+	eventCategory = "qjelt"
 )
 
 // RenderCalendar writes a complete VCALENDAR document containing one VEVENT
 // per entry in events. calName is exposed as X-WR-CALNAME so calendar clients
-// display a friendly name; pass "" to omit it.
-func RenderCalendar(w io.Writer, events []models.Event, calName string) error {
+// display a friendly name; pass "" to omit it. baseURL is used to build an
+// absolute URL property pointing to each event's public page; pass "" to omit
+// the URL.
+func RenderCalendar(w io.Writer, events []models.Event, calName string, baseURL string) error {
 	var b strings.Builder
 	b.WriteString("BEGIN:VCALENDAR\r\n")
 	b.WriteString("VERSION:2.0\r\n")
@@ -27,14 +33,14 @@ func RenderCalendar(w io.Writer, events []models.Event, calName string) error {
 	}
 	now := time.Now().UTC().Format(timeStamp)
 	for _, e := range events {
-		writeEvent(&b, e, now)
+		writeEvent(&b, e, now, baseURL)
 	}
 	b.WriteString("END:VCALENDAR\r\n")
 	_, err := io.WriteString(w, b.String())
 	return err
 }
 
-func writeEvent(b *strings.Builder, e models.Event, now string) {
+func writeEvent(b *strings.Builder, e models.Event, now string, baseURL string) {
 	b.WriteString("BEGIN:VEVENT\r\n")
 	b.WriteString("UID:" + e.ID + "@libreregistration\r\n")
 	b.WriteString("DTSTAMP:" + now + "\r\n")
@@ -47,6 +53,10 @@ func writeEvent(b *strings.Builder, e models.Event, now string) {
 	if e.Description != "" {
 		b.WriteString("DESCRIPTION:" + escape(e.Description) + "\r\n")
 	}
+	if baseURL != "" && e.Slug != "" {
+		b.WriteString("URL:" + escape(baseURL+"/event/"+e.Slug) + "\r\n")
+	}
+	b.WriteString("CATEGORIES:" + eventCategory + "\r\n")
 	b.WriteString("END:VEVENT\r\n")
 }
 

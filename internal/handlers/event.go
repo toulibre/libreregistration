@@ -125,7 +125,7 @@ func (h *EventHandler) ICal(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/calendar; charset=utf-8")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.ics"`, event.Slug))
-	_ = ical.RenderCalendar(w, []models.Event{*event}, event.Title)
+	_ = ical.RenderCalendar(w, []models.Event{*event}, event.Title, h.baseURL)
 }
 
 func (h *EventHandler) ICalUpcoming(w http.ResponseWriter, r *http.Request) {
@@ -137,7 +137,7 @@ func (h *EventHandler) ICalUpcoming(w http.ResponseWriter, r *http.Request) {
 	siteName, _ := h.settings.GetSiteSettings()
 	w.Header().Set("Content-Type", "text/calendar; charset=utf-8")
 	w.Header().Set("Content-Disposition", `attachment; filename="events.ics"`)
-	_ = ical.RenderCalendar(w, events, siteName)
+	_ = ical.RenderCalendar(w, events, siteName, h.baseURL)
 }
 
 func (h *EventHandler) ICalPast(w http.ResponseWriter, r *http.Request) {
@@ -162,7 +162,7 @@ func (h *EventHandler) ICalPast(w http.ResponseWriter, r *http.Request) {
 	siteName, _ := h.settings.GetSiteSettings()
 	w.Header().Set("Content-Type", "text/calendar; charset=utf-8")
 	w.Header().Set("Content-Disposition", `attachment; filename="events-past.ics"`)
-	_ = ical.RenderCalendar(w, events, siteName)
+	_ = ical.RenderCalendar(w, events, siteName, h.baseURL)
 }
 
 // Admin routes
