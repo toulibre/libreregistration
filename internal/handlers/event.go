@@ -392,7 +392,7 @@ func (h *EventHandler) parseEventForm(r *http.Request) (*models.Event, error) {
 	if eventDateStr == "" {
 		return &models.Event{Title: title}, errMissing(ctx, "field.event_date")
 	}
-	eventDate, err := time.ParseInLocation("2006-01-02T15:04", eventDateStr, time.Local)
+	eventDate, err := time.ParseInLocation("2006-01-02T15:04", eventDateStr, i18n.Location())
 	if err != nil {
 		return &models.Event{Title: title}, errInvalid(ctx, "field.event_date")
 	}
@@ -408,7 +408,7 @@ func (h *EventHandler) parseEventForm(r *http.Request) (*models.Event, error) {
 	}
 
 	if dl := r.FormValue("registration_deadline"); dl != "" {
-		t, err := time.ParseInLocation("2006-01-02T15:04", dl, time.Local)
+		t, err := time.ParseInLocation("2006-01-02T15:04", dl, i18n.Location())
 		if err != nil {
 			return event, errInvalid(ctx, "field.deadline")
 		}

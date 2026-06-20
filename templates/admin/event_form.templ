@@ -240,14 +240,14 @@ func formatDatetimeLocal(t time.Time) string {
 	if t.IsZero() {
 		return ""
 	}
-	return t.Format("2006-01-02T15:04")
+	return t.In(i18n.Location()).Format("2006-01-02T15:04")
 }
 
 func formatOptionalDatetimeLocal(t *time.Time) string {
 	if t == nil {
 		return ""
 	}
-	return t.Format("2006-01-02T15:04")
+	return t.In(i18n.Location()).Format("2006-01-02T15:04")
 }
 
 func formatOptionalInt(v *int) string {

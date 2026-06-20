@@ -78,7 +78,26 @@ func Tn(ctx context.Context, key string, count int) string {
 }
 
 // FormatDate formats a time as a localized date string.
+// location is the application timezone in which event dates are displayed.
+// Event timestamps are stored as UTC instants; they are converted to this
+// location for display. Defaults to UTC until SetLocation is called at startup.
+var location = time.UTC
+
+// SetLocation sets the application display timezone. Called once at startup.
+func SetLocation(loc *time.Location) {
+	if loc != nil {
+		location = loc
+	}
+}
+
+// Location returns the application timezone used for parsing and displaying
+// event dates.
+func Location() *time.Location {
+	return location
+}
+
 func FormatDate(ctx context.Context, t time.Time) string {
+	t = t.In(location)
 	lang := Locale(ctx)
 	switch lang {
 	case "en":
@@ -90,6 +109,7 @@ func FormatDate(ctx context.Context, t time.Time) string {
 
 // FormatDateTime formats a time as a localized date+time string.
 func FormatDateTime(ctx context.Context, t time.Time) string {
+	t = t.In(location)
 	lang := Locale(ctx)
 	switch lang {
 	case "en":
@@ -101,6 +121,7 @@ func FormatDateTime(ctx context.Context, t time.Time) string {
 
 // FormatDateTimeCSV formats a time for CSV export.
 func FormatDateTimeCSV(ctx context.Context, t time.Time) string {
+	t = t.In(location)
 	lang := Locale(ctx)
 	switch lang {
 	case "en":

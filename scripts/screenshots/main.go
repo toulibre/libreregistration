@@ -58,7 +58,7 @@ func run() error {
 	}
 	defer db.Close()
 
-	if err := database.Migrate(db); err != nil {
+	if err := database.Migrate(db, time.UTC); err != nil {
 		return fmt.Errorf("migrate: %w", err)
 	}
 

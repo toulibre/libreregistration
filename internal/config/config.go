@@ -12,6 +12,7 @@ type Config struct {
 	SessionSecret  string
 	CSRFKey        string
 	BaseURL        string
+	Timezone       string
 	AdminUsername   string
 	AdminPassword  string
 	SMTPHost       string
@@ -33,6 +34,7 @@ func Load() *Config {
 		SessionSecret: envOr("SESSION_SECRET", "change-me-in-production-32chars!"),
 		CSRFKey:       envOr("CSRF_KEY", "change-me-csrf-key-32-chars!!!!"),
 		BaseURL:       envOr("BASE_URL", "http://localhost:8080"),
+		Timezone:      envOr("APP_TIMEZONE", "Europe/Paris"),
 		AdminUsername: envOr("ADMIN_USERNAME", ""),
 		AdminPassword: envOr("ADMIN_PASSWORD", ""),
 		SMTPHost:      envOr("SMTP_HOST", ""),

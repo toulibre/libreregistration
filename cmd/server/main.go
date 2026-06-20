@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/sessions"
@@ -13,6 +14,7 @@ import (
 	"github.com/toulibre/libreregistration/internal/config"
 	"github.com/toulibre/libreregistration/internal/database"
 	"github.com/toulibre/libreregistration/internal/handlers"
+	"github.com/toulibre/libreregistration/internal/i18n"
 	"github.com/toulibre/libreregistration/internal/middleware"
 	"github.com/toulibre/libreregistration/internal/services"
 	"github.com/toulibre/libreregistration/templates/public"
@@ -26,6 +28,14 @@ func main() {
 
 func run() error {
 	cfg := config.Load()
+
+	// Application timezone: event dates are stored as UTC instants and parsed
+	// from / displayed in this location.
+	loc, err := time.LoadLocation(cfg.Timezone)
+	if err != nil {
+		return fmt.Errorf("invalid APP_TIMEZONE %q: %w", cfg.Timezone, err)
+	}
+	i18n.SetLocation(loc)
 
 	// Open database
 	driver := cfg.DatabaseDriver
@@ -42,7 +52,7 @@ func run() error {
 	defer db.Close()
 
 	// Run migrations
-	if err := database.Migrate(db); err != nil {
+	if err := database.Migrate(db, loc); err != nil {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
