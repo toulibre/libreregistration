@@ -165,6 +165,43 @@ func (h *EventHandler) ICalPast(w http.ResponseWriter, r *http.Request) {
 	_ = ical.RenderCalendar(w, events, siteName, h.baseURL)
 }
 
+// EventsJSON serves upcoming events as JSON so the static toulibre.org site can
+// refresh its events list client-side without a rebuild. Read-only public data,
+// so a permissive CORS header is fine. Dates are emitted as RFC3339 UTC; the
+// consumer converts them to its display timezone.
+func (h *EventHandler) EventsJSON(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Cache-Control", "public, max-age=300")
+
+	events, err := h.events.ListUpcoming()
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	type eventJSON struct {
+		Title       string `json:"title"`
+		Date        string `json:"date"`
+		Location    string `json:"location"`
+		Description string `json:"description"`
+		Type        string `json:"type"`
+		URL         string `json:"url"`
+	}
+	out := make([]eventJSON, 0, len(events))
+	for _, e := range events {
+		out = append(out, eventJSON{
+			Title:       e.Title,
+			Date:        e.EventDate.UTC().Format(time.RFC3339),
+			Location:    e.Location,
+			Description: e.Description,
+			Type:        "qjelt",
+			URL:         h.baseURL + "/event/" + e.Slug,
+		})
+	}
+	_ = json.NewEncoder(w).Encode(out)
+}
+
 // Admin routes
 
 func (h *EventHandler) List(w http.ResponseWriter, r *http.Request) {

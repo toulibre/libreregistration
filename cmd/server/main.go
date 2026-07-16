@@ -132,6 +132,7 @@ func run() error {
 	r.Get("/", eventHandler.Home)
 	r.Get("/events.ics", eventHandler.ICalUpcoming)
 	r.Get("/events/past.ics", eventHandler.ICalPast)
+	r.Get("/events.json", eventHandler.EventsJSON)
 	r.Get("/event/{slug}", eventHandler.Show)
 	r.Get("/event/{slug}/ical", eventHandler.ICal)
 	r.Post("/event/{slug}/register", registrationHandler.Register)
