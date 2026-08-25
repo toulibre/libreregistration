@@ -65,7 +65,7 @@ func SendEmailVerification(cfg *config.Config, ctx context.Context, to, verifyUR
 }
 
 func send(cfg *config.Config, to, subject, body string) error {
-	addr := fmt.Sprintf("%s:%s", cfg.SMTPHost, cfg.SMTPPort)
+	addr := net.JoinHostPort(cfg.SMTPHost, cfg.SMTPPort)
 	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n%s",
 		fromHeader(cfg), to, subject, body)
 
