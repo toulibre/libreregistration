@@ -1,11 +1,23 @@
 package admin
 
 import (
+	"context"
 	"fmt"
 	"github.com/toulibre/libreregistration/internal/i18n"
 	"github.com/toulibre/libreregistration/internal/models"
 	"github.com/toulibre/libreregistration/templates/layouts"
 )
+
+// eventCategoryLabel translates a category for display, falling back to the
+// raw stored value so a legacy or unknown category stays readable instead of
+// surfacing the missing translation key.
+func eventCategoryLabel(ctx context.Context, category string) string {
+	key := "event_category." + category
+	if label := i18n.T(ctx, key); label != key {
+		return label
+	}
+	return category
+}
 
 script confirmSubmit(msg string) {
 	if (!confirm(msg)) {
@@ -36,6 +48,7 @@ templ Events(events []models.Event, pag models.Pagination, siteName string, acce
 						<tr>
 							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.title") }</th>
 							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.date") }</th>
+							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.category") }</th>
 							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.registrations") }</th>
 							<th class="text-left px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.status") }</th>
 							<th class="text-right px-4 py-3 text-sm font-medium text-gray-500">{ i18n.T(ctx, "events.col.actions") }</th>
@@ -48,6 +61,13 @@ templ Events(events []models.Event, pag models.Pagination, siteName string, acce
 									<a href={ templ.SafeURL("/event/" + event.Slug) } class="text-accent hover:underline" target="_blank">{ event.Title }</a>
 								</td>
 								<td class="px-4 py-3 text-sm text-gray-500">{ i18n.FormatDateTimeCSV(ctx, event.EventDate) }</td>
+								<td class="px-4 py-3 text-sm">
+									if event.Category != "" {
+										<span class="inline-block px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs">{ eventCategoryLabel(ctx, event.Category) }</span>
+									} else {
+										<span class="text-gray-400" aria-label={ i18n.T(ctx, "events.category_none") }>&#8212;</span>
+									}
+								</td>
 								<td class="px-4 py-3 text-sm">
 									if event.MaxCapacity != nil {
 										{ fmt.Sprintf("%d / %d", event.RegistrationCount, *event.MaxCapacity) }

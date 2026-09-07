@@ -34,6 +34,35 @@ func (u User) DisplayName() string {
 	return u.Username
 }
 
+// EventCategories is the closed set of categories an event may carry. It is
+// exposed verbatim as the iCal CATEGORIES property, and consumers (e.g. the
+// public website) map each value to a display type — so the set is closed on
+// purpose: a free-text typo would silently break their rendering.
+var EventCategories = []string{
+	"qjelt",
+	"permanence",
+	"atelier",
+	"projection",
+	"conference",
+}
+
+// DefaultEventCategory pre-selects the most common category on a new event.
+const DefaultEventCategory = "qjelt"
+
+// IsValidEventCategory reports whether c is offered by the event form. The
+// empty string is valid and means "uncategorised" (no CATEGORIES property).
+func IsValidEventCategory(c string) bool {
+	if c == "" {
+		return true
+	}
+	for _, known := range EventCategories {
+		if c == known {
+			return true
+		}
+	}
+	return false
+}
+
 type Event struct {
 	ID                   string
 	Title                string
@@ -41,6 +70,7 @@ type Event struct {
 	Description          string
 	DescriptionHTML      string // rendered markdown, not stored
 	Location             string
+	Category             string
 	EventDate            time.Time
 	RegistrationDeadline *time.Time
 	MaxCapacity          *int

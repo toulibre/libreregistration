@@ -141,6 +141,7 @@ func (s *EventService) Clone(id, userID, suffix string) (*models.Event, error) {
 		Title:                original.Title + " " + suffix,
 		Description:          original.Description,
 		Location:             original.Location,
+		Category:             original.Category,
 		EventDate:            original.EventDate,
 		RegistrationDeadline: original.RegistrationDeadline,
 		MaxCapacity:          original.MaxCapacity,

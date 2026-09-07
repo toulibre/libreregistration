@@ -12,10 +12,6 @@ import (
 const (
 	prodID    = "-//LibreRegistration//EN"
 	timeStamp = "20060102T150405Z"
-	// category exposed on every VEVENT. LibreRegistration only manages
-	// registration-based QJeLT events, so a single fixed category is accurate
-	// and lets consumers (e.g. the public website) map events to a type.
-	eventCategory = "qjelt"
 )
 
 // RenderCalendar writes a complete VCALENDAR document containing one VEVENT
@@ -56,7 +52,11 @@ func writeEvent(b *strings.Builder, e models.Event, now string, baseURL string) 
 	if baseURL != "" && e.Slug != "" {
 		b.WriteString("URL:" + escape(baseURL+"/event/"+e.Slug) + "\r\n")
 	}
-	b.WriteString("CATEGORIES:" + eventCategory + "\r\n")
+	// Consumers (e.g. the public website) map this to a display type. Omitted
+	// rather than guessed when the event carries no category.
+	if e.Category != "" {
+		b.WriteString("CATEGORIES:" + escape(e.Category) + "\r\n")
+	}
 	b.WriteString("END:VEVENT\r\n")
 }
 

@@ -227,6 +227,7 @@ func (h *EventHandler) NewForm(w http.ResponseWriter, r *http.Request) {
 	event := &models.Event{
 		AttendeeListPublic: true,
 		RegistrationOpen:   true,
+		Category:           models.DefaultEventCategory,
 	}
 	users, _ := h.auth.ListUsers()
 	admin.EventForm(event, false, siteName, accentColor, middleware.GetDisplayName(r), csrfField, "", users, nil).Render(r.Context(), w)
@@ -439,9 +440,15 @@ func (h *EventHandler) parseEventForm(r *http.Request) (*models.Event, error) {
 		Slug:               strings.TrimSpace(r.FormValue("slug")),
 		Description:        r.FormValue("description"),
 		Location:           r.FormValue("location"),
+		Category:           r.FormValue("category"),
 		EventDate:          eventDate,
 		AttendeeListPublic: r.FormValue("attendee_list_public") == "true",
 		RegistrationOpen:   r.FormValue("registration_open") == "true",
+	}
+
+	// The form offers a closed <select>; anything else means a tampered payload.
+	if !models.IsValidEventCategory(event.Category) {
+		return event, errInvalid(ctx, "field.category")
 	}
 
 	if dl := r.FormValue("registration_deadline"); dl != "" {

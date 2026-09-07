@@ -18,11 +18,11 @@ func NewEventStore(db *DB) *EventStore {
 
 func (s *EventStore) Create(e *models.Event) error {
 	_, err := s.db.Exec(`INSERT INTO events
-		(id, title, slug, description, location, event_date, registration_deadline, max_capacity,
+		(id, title, slug, description, location, category, event_date, registration_deadline, max_capacity,
 		 attendee_list_public, registration_open, image_path, banner_path, latitude, longitude,
 		 created_by, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		e.ID, e.Title, e.Slug, e.Description, e.Location, e.EventDate,
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		e.ID, e.Title, e.Slug, e.Description, e.Location, e.Category, e.EventDate,
 		e.RegistrationDeadline, e.MaxCapacity,
 		e.AttendeeListPublic, e.RegistrationOpen,
 		e.ImagePath, e.BannerPath, e.Latitude, e.Longitude,
@@ -36,13 +36,13 @@ func (s *EventStore) Create(e *models.Event) error {
 
 func (s *EventStore) Update(e *models.Event) error {
 	_, err := s.db.Exec(`UPDATE events SET
-		title = ?, slug = ?, description = ?, location = ?, event_date = ?,
+		title = ?, slug = ?, description = ?, location = ?, category = ?, event_date = ?,
 		registration_deadline = ?, max_capacity = ?,
 		attendee_list_public = ?, registration_open = ?,
 		image_path = ?, banner_path = ?, latitude = ?, longitude = ?,
 		updated_at = ?
 		WHERE id = ?`,
-		e.Title, e.Slug, e.Description, e.Location, e.EventDate,
+		e.Title, e.Slug, e.Description, e.Location, e.Category, e.EventDate,
 		e.RegistrationDeadline, e.MaxCapacity,
 		e.AttendeeListPublic, e.RegistrationOpen,
 		e.ImagePath, e.BannerPath, e.Latitude, e.Longitude,
@@ -55,7 +55,7 @@ func (s *EventStore) Update(e *models.Event) error {
 }
 
 func (s *EventStore) GetByID(id string) (*models.Event, error) {
-	return s.scanEvent(s.db.QueryRow(`SELECT e.id, e.title, e.slug, e.description, e.location, e.event_date,
+	return s.scanEvent(s.db.QueryRow(`SELECT e.id, e.title, e.slug, e.description, e.location, e.category, e.event_date,
 		e.registration_deadline, e.max_capacity, e.attendee_list_public, e.registration_open,
 		e.image_path, e.banner_path, e.latitude, e.longitude,
 		e.created_by, e.created_at, e.updated_at,
@@ -64,7 +64,7 @@ func (s *EventStore) GetByID(id string) (*models.Event, error) {
 }
 
 func (s *EventStore) GetBySlug(slug string) (*models.Event, error) {
-	return s.scanEvent(s.db.QueryRow(`SELECT e.id, e.title, e.slug, e.description, e.location, e.event_date,
+	return s.scanEvent(s.db.QueryRow(`SELECT e.id, e.title, e.slug, e.description, e.location, e.category, e.event_date,
 		e.registration_deadline, e.max_capacity, e.attendee_list_public, e.registration_open,
 		e.image_path, e.banner_path, e.latitude, e.longitude,
 		e.created_by, e.created_at, e.updated_at,
@@ -221,7 +221,7 @@ func (s *EventStore) GetOrganizerEmails(eventID string) ([]string, error) {
 }
 
 func (s *EventStore) listEvents(where string, args ...interface{}) ([]models.Event, error) {
-	query := fmt.Sprintf(`SELECT e.id, e.title, e.slug, e.description, e.location, e.event_date,
+	query := fmt.Sprintf(`SELECT e.id, e.title, e.slug, e.description, e.location, e.category, e.event_date,
 		e.registration_deadline, e.max_capacity, e.attendee_list_public, e.registration_open,
 		e.image_path, e.banner_path, e.latitude, e.longitude,
 		e.created_by, e.created_at, e.updated_at,
@@ -260,7 +260,7 @@ func (s *EventStore) scanEvent(row *sql.Row) (*models.Event, error) {
 func (s *EventStore) scanEventRow(row scanner) (*models.Event, error) {
 	var e models.Event
 	err := row.Scan(
-		&e.ID, &e.Title, &e.Slug, &e.Description, &e.Location, &e.EventDate,
+		&e.ID, &e.Title, &e.Slug, &e.Description, &e.Location, &e.Category, &e.EventDate,
 		&e.RegistrationDeadline, &e.MaxCapacity, &e.AttendeeListPublic, &e.RegistrationOpen,
 		&e.ImagePath, &e.BannerPath, &e.Latitude, &e.Longitude,
 		&e.CreatedBy, &e.CreatedAt, &e.UpdatedAt, &e.RegistrationCount,
