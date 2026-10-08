@@ -351,13 +351,13 @@ func takeScreenshots() error {
 
 	// Admin login
 	log.Println("Logging in to admin panel")
-	if err := chromedp.Run(ctx,
+	if err := chromedp.Do(ctx,
 		chromedp.Navigate(baseURL+"/admin/login"),
-		chromedp.WaitVisible(`#username`, chromedp.ByID),
-		chromedp.SendKeys(`#username`, adminUser, chromedp.ByID),
-		chromedp.SendKeys(`#password`, adminPass, chromedp.ByID),
-		chromedp.Click(`button[type="submit"]`, chromedp.ByQuery),
-		chromedp.WaitVisible(`main`, chromedp.ByQuery),
+		chromedp.WaitVisible(chromedp.ID("username")),
+		chromedp.SendKeys(chromedp.ID("username"), adminUser),
+		chromedp.SendKeys(chromedp.ID("password"), adminPass),
+		chromedp.Click(chromedp.CSS(`button[type="submit"]`)),
+		chromedp.WaitVisible(chromedp.CSS(`main`)),
 	); err != nil {
 		return fmt.Errorf("admin login: %w", err)
 	}
@@ -384,13 +384,15 @@ func takeScreenshots() error {
 }
 
 func captureScreenshot(ctx context.Context, url, path string) error {
-	var buf []byte
-	if err := chromedp.Run(ctx,
+	if err := chromedp.Do(ctx,
 		chromedp.Navigate(url),
-		chromedp.WaitReady(`body`, chromedp.ByQuery),
+		chromedp.WaitReady(chromedp.CSS(`body`)),
 		chromedp.Sleep(500*time.Millisecond),
-		chromedp.CaptureScreenshot(&buf),
 	); err != nil {
+		return fmt.Errorf("screenshot %s: %w", path, err)
+	}
+	buf, err := chromedp.Run(ctx, chromedp.CaptureScreenshot())
+	if err != nil {
 		return fmt.Errorf("screenshot %s: %w", path, err)
 	}
 	log.Printf("  -> %s (%d KB)", path, len(buf)/1024)
