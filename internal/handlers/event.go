@@ -168,7 +168,9 @@ func (h *EventHandler) ICalPast(w http.ResponseWriter, r *http.Request) {
 // EventsJSON serves upcoming events as JSON so the static toulibre.org site can
 // refresh its events list client-side without a rebuild. Read-only public data,
 // so a permissive CORS header is fine. Dates are emitted as RFC3339 UTC; the
-// consumer converts them to its display timezone.
+// consumer converts them to its display timezone. "type" carries the event's
+// category (empty when uncategorised) and must stay consistent with the iCal
+// CATEGORIES property, since the consumer styles both from the same mapping.
 func (h *EventHandler) EventsJSON(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -195,7 +197,7 @@ func (h *EventHandler) EventsJSON(w http.ResponseWriter, r *http.Request) {
 			Date:        e.EventDate.UTC().Format(time.RFC3339),
 			Location:    e.Location,
 			Description: e.Description,
-			Type:        "qjelt",
+			Type:        e.Category,
 			URL:         h.baseURL + "/event/" + e.Slug,
 		})
 	}
